@@ -1,0 +1,49 @@
+---
+import Base from './Base.astro';
+import Navigation from '../components/Navigation.astro';
+import '../styles/detail.css';
+import type { CollectionEntry } from 'astro:content';
+interface Props { project: CollectionEntry<'projects'>; headings: { depth: number; slug: string; text: string }[] }
+const { project, headings } = Astro.props;
+const { title, summary, role, tools, image, imageAlt, imageWidth, imageHeight, caption, demo, sources, evidence } = project.data;
+const shortLabels: Record<string, string> = {
+  'problem-and-objective': 'Problem',
+  'my-contribution-and-approach': 'Approach',
+  'reported-results-and-limitations': 'Results',
+};
+const sections = [
+  { id: 'overview', label: 'Overview' },
+  ...headings.filter(h => h.depth === 2 || h.depth === 3).map(h => ({ id: h.slug, label: shortLabels[h.slug] || h.text })),
+  { id: 'resources', label: sources.length ? 'Sources' : 'Evidence' },
+];
+---
+<Base title={title} description={summary}>
+  <div class="detail-shell">
+    <a class="back compact-back" href="/#projects">Back to projects</a>
+    <div class="detail-layout">
+      <Navigation detail sections={sections} />
+      <main class="case-study">
+        <header class="panel">
+          <p class="eyebrow">Atharva Bhorpe · Project</p>
+          <h1 id="overview" tabindex="-1">{title}</h1>
+          <p class="summary">{summary}</p>
+          <dl class="facts"><dt>Role</dt><dd>{role}</dd><dt>Tools</dt><dd>{tools}</dd></dl>
+          {demo ? <figure class="cover">
+            <video controls playsinline preload="metadata" poster={demo.poster} width={demo.width} height={demo.height} style={`aspect-ratio:${demo.width}/${demo.height}`} tabindex="0" aria-label={`${title} demonstration`} aria-describedby="project-demo-caption">
+              <source src={demo.src} type="video/mp4" />
+              <a href={demo.src}>Open the project recording</a>
+            </video>
+            <figcaption id="project-demo-caption">{demo.description}</figcaption>
+            <nav class="links" aria-label="Demonstration source"><a href={demo.sourceUrl} target="_blank" rel="noopener noreferrer">Original recording ↗</a></nav>
+          </figure> : image && <figure class="cover"><img src={image} width={imageWidth} height={imageHeight} alt={imageAlt || ''} /><figcaption>{caption}</figcaption></figure>}
+        </header>
+        <slot />
+        <section class="panel" aria-labelledby="resources">
+          <h2 id="resources" tabindex="-1">Sources and evidence</h2>
+          {sources.length ? <nav class="links" aria-label="Project resources">{sources.map(source => <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} ↗</a>)}</nav> : <p class="source">{evidence || 'Source: supplied résumé. Public code, challenge evaluation and demonstration links have not been supplied.'}</p>}
+        </section>
+        <a class="back" href="/#projects">← Back to projects</a>
+      </main>
+    </div>
+  </div>
+</Base>

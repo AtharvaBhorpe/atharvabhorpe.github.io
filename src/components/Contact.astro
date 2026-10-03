@@ -1,0 +1,13 @@
+---
+import { profile } from '../data/site';
+interface Props { mobile?: boolean }
+const { mobile = false } = Astro.props;
+---
+<div class:list={['copy-scope', mobile ? 'contact-items' : 'rail-group secondary contact-resources']} role="group" aria-label="Resources and contact">
+  <a class="resume-link" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume</a>
+  <a href={profile.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+  <a href={profile.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+  <button class="copy-email" type="button" data-email={profile.email}>Copy Email</button>
+  <p class="copy-status" role="status" aria-live="polite"></p>
+  <label class="email-fallback" hidden>Email address<input type="text" readonly aria-label="Email address for manual copy" /></label>
+</div>

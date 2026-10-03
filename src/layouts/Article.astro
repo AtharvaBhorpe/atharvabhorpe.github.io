@@ -1,0 +1,26 @@
+---
+// Reusable shell only: no article route is published without real article content.
+import Base from './Base.astro';
+import Navigation from '../components/Navigation.astro';
+import '../styles/detail.css';
+interface Props {
+  title: string;
+  description: string;
+  headings: { depth: number; slug: string; text: string }[];
+}
+const { title, description, headings } = Astro.props;
+const sections = [{ id:'overview', label:'Overview' }, ...headings.filter(h=>h.depth===2 || h.depth===3).map(h=>({ id:h.slug, label:h.text }))];
+---
+<Base title={title} description={description}>
+  <div class="detail-shell">
+    <a class="back compact-back" href="/#writing">Back to writing</a>
+    <div class="detail-layout">
+      <Navigation detail sections={sections} backHref="/#writing" backLabel="Writing" />
+      <main class="case-study">
+        <header class="panel"><p class="eyebrow">Atharva Bhorpe · Writing</p><h1 id="overview" tabindex="-1">{title}</h1><p class="summary">{description}</p></header>
+        <slot />
+        <a class="back" href="/#writing">← Back to writing</a>
+      </main>
+    </div>
+  </div>
+</Base>

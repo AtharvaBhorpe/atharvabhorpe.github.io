@@ -1,0 +1,50 @@
+---
+import Base from '../layouts/Base.astro';
+import Navigation from '../components/Navigation.astro';
+import { getCollection } from 'astro:content';
+import { profile, homeSections } from '../data/site';
+import { writing } from '../data/writing';
+import '../styles/home.css';
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+---
+<Base home title="Robotics portfolio" description="Atharva Bhorpe's robotics projects, model development and tutorials.">
+  <div class="page-scroll" role="region" aria-label="Portfolio" tabindex="0">
+    <main class="stage" aria-label="Atharva Bhorpe portfolio">
+      <div class="layout">
+        <Navigation sections={homeSections} />
+        <div class="content">
+          <div class="mobile-head"><div class="name">Atharva Bhorpe</div></div>
+          <section class="intro panel" id="home" tabindex="-1">
+            <img class="portrait" src="/images/portrait.png" width="192" height="192" alt="Portrait of Atharva Bhorpe" />
+            <div class="intro-copy">
+              <h1>Hi, I’m Atharva.</h1>
+              <p class="positioning">Building learning-based robotic systems.</p>
+              <p>Robotics master’s student at RWTH Aachen. Mechanical engineering and industrial automation background.</p>
+              <p>Before my robotics studies, I developed technical proposals for vehicle and EV-battery automation at Wipro PARI. I’m interested in imitation learning for manipulation and compact models for robot navigation.</p>
+              <nav class="intro-contact" aria-label="Profile links"><button class="link-pending" type="button" disabled title="Resume pending final approval">Resume</button><a href={profile.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+            </div>
+          </section>
+          <section class="projects panel" aria-labelledby="projects">
+            <h2 class="section-head" id="projects" tabindex="-1">Selected projects</h2>
+            {projects.map(({ id, data: p }) => {
+              const words = p.title.split(' '), lastWord = words.pop();
+              const [result, ...contribution] = p.outcome.split(' · ');
+              return <a class="project project-link" href={`/projects/${id}/`}>
+              <h3>{words.join(' ')} <span class="title-end">{lastWord}<span class="arrow" aria-hidden="true">↗</span></span></h3>
+              <div class:list={['project-body', { 'no-image': !p.image && !p.demo }]}>
+                <dl class="facts"><dt>Objective</dt><dd>{p.objective}</dd><dt>Outcome / role</dt><dd><strong>{result}</strong> · {contribution.join(' · ')}</dd><dt>Tools</dt><dd>{p.tools}</dd></dl>
+                {(p.image || p.demo) && <img class="thumbnail" src={p.thumbnail || p.demo?.poster || p.image} alt={p.thumbnailAlt || p.imageAlt || `Project visual for ${p.title}`} loading="lazy" />}
+              </div>
+            </a>;
+            })}
+          </section>
+          <section class="writing panel" aria-labelledby="writing">
+            <div class="writing-head"><h2 id="writing" tabindex="-1">Writing</h2><a href={profile.writing}>All writing →</a></div>
+            {writing.map(entry => <a class="writing-row" href={entry.url}><span class="kind">{entry.kind}</span><span>{entry.title}</span></a>)}
+          </section>
+          <footer><span>Aachen, Germany</span></footer>
+        </div>
+      </div>
+    </main>
+  </div>
+</Base>

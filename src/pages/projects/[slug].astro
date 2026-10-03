@@ -1,0 +1,11 @@
+---
+import { getCollection, render } from 'astro:content';
+import Project from '../../layouts/Project.astro';
+// https://docs.astro.build/en/guides/content-collections/#generating-routes-from-content
+export async function getStaticPaths() {
+  return (await getCollection('projects')).map(project => ({ params: { slug: project.id }, props: { project } }));
+}
+const { project } = Astro.props;
+const { Content, headings } = await render(project);
+---
+<Project project={project} headings={headings}><Content /></Project>

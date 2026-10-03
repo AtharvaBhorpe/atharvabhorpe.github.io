@@ -1,0 +1,22 @@
+---
+import '../styles/theme.css';
+import '../styles/production.css';
+interface Props { title: string; description: string; home?: boolean }
+const { title, description, home = false } = Astro.props;
+---
+<!doctype html>
+<html lang="en" data-direction="cabinet">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title} — Atharva Bhorpe</title>
+    <script is:inline src="/theme.js"></script>
+    <script is:inline src="/navigation.js"></script>
+    <link rel="icon" href="data:," />
+  </head>
+  <body class={home ? 'home-page' : 'detail-page'}>
+    <slot />
+    <script is:inline src="/ui.js"></script>
+  </body>
+</html>

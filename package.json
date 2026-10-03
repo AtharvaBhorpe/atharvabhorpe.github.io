@@ -1,0 +1,16 @@
+{
+  "name": "atharva-portfolio",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1",
+    "check": "astro check",
+    "audit": "node tests/audit.cjs",
+    "test": "node tests/portfolio.cjs"
+  },
+  "dependencies": { "astro": "7.3.5" },
+  "devDependencies": { "@astrojs/check": "0.9.10", "typescript": "5.9.3", "playwright": "1.63.0" }
+}

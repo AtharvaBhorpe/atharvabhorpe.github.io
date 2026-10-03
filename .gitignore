@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.env*
+# Private historical design records remain local.
+recovered-cloudroom/
+reports/
+DESIGN.md
+*.pem
+*.key
+*.log
