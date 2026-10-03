@@ -109,7 +109,8 @@ for (const mode of ['light','dark']) {
         if(width===1440 && height===900) await verifyFonts(route);
         assert(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth));
         assert.equal(await page.locator('.controls,.preview-chrome,.note,.preview-settings').count(), 0);
-        assert.equal(await page.locator('.resume-link').count(),2);
+        assert.equal(await page.locator('.resume-link').count(),route==='/'?3:2);
+        assert.equal(await page.getByRole('button',{name:'Resume',includeHidden:true}).count(),0);
         assert(await page.locator('.resume-link').evaluateAll(nodes=>nodes.every(a=>a.tagName==='A'&&a.getAttribute('href')==='/resume.pdf'&&a.target==='_blank'&&a.rel.includes('noopener'))));
         const ids = await page.locator('aside [data-section]').evaluateAll(nodes => nodes.map(n=>n.dataset.section));
         const len = await page.evaluate(() => history.length);

@@ -21,7 +21,7 @@ const projects = (await getCollection('projects')).sort((a, b) => a.data.order -
               <p class="positioning">Building learning-based robotic systems.</p>
               <p>Robotics master’s student at RWTH Aachen. Mechanical engineering and industrial automation background.</p>
               <p>Before my robotics studies, I developed technical proposals for vehicle and EV-battery automation at Wipro PARI. I’m interested in imitation learning for manipulation and compact models for robot navigation.</p>
-              <nav class="intro-contact" aria-label="Profile links"><button class="link-pending" type="button" disabled title="Resume pending final approval">Resume</button><a href={profile.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+              <nav class="intro-contact" aria-label="Profile links"><a class="resume-link" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume</a><a href={profile.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
             </div>
           </section>
           <section class="projects panel" aria-labelledby="projects">
