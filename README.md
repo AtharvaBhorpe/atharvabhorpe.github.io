@@ -49,7 +49,7 @@ Resume links use the approved two-page PDF. The AMR result is author-reported: t
 The 10-metre track remains the documented test method. No independent benchmark reproduction is claimed.
 The TRM video is a real silent recording. It has native controls and does not autoplay or loop.
 Homepage thumbnails are static images. The SO-ARM101 video is an official external link, not IMU-project evidence.
-Insertion and IMU demonstration media remain optional content gaps; the site does not invent visuals.
+Insertion and IMU demonstration media remain optional content gaps. The site does not invent visuals.
 No local article text or route is published without real source content.
 
 If a recording uses non-square pixels, use its display aspect ratio for its poster and reserved dimensions.
@@ -57,7 +57,7 @@ Project sections use `<section class="panel prose">`. Navigation comes from actu
 
 ## Licenses and security
 
-The previous template license remains in `LICENSE.txt`; [the notices](NOTICE.md) identify its scope and author.
+The previous template license remains in `LICENSE.txt`. [The notices](NOTICE.md) identify its scope and author.
 The fonts retain their approved bytes and [Fontshare license](public/fonts/Fontshare-FFL.txt).
 Use the fonts for this site, not as a redistributable font library.
 [The security review](SECURITY.md) records a time-limited exception for an unreachable dependency-cache advisory.
