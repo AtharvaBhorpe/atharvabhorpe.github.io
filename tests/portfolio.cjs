@@ -22,7 +22,7 @@ const approvedAssets = {
   'fonts/satoshi.woff2':'e739aff9b4d02c264341d6d4872edcda28e79373aeda936f659566a1cd3eb47f',
   'fonts/Fontshare-FFL.txt':'145e7fe2429a3336ba215c070ef722000e01348a3e1baaa127e871bb5012f554',
   'images/portrait.png':'614a5de87e5d9da6005f7fddf48a99fe9a4ad3a7cd395835b766997a940cda8c',
-  'resume.pdf':'b8fc7f6da33ace2689c77aabd2b6fb23ce61c25806e1693a721d55ee3894bc26',
+  'resume.pdf':'a8204267abc9b353a25df423678245a77ec362c2da0461e66acbc6e09a4de900',
 };
 for (const [file,hash] of Object.entries(approvedAssets)) assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,'public',file))).digest('hex'), hash, file);
 const css = fs.readFileSync(path.join(root,'src/styles/theme.css'),'utf8');
