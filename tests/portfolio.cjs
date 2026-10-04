@@ -9,12 +9,20 @@ const root = path.resolve(__dirname, '..');
 const out = process.env.EVIDENCE_DIR || path.join(require('node:os').tmpdir(), 'portfolio-evidence');
 const pages = ['/', ...fs.readdirSync(path.join(root, 'dist/projects')).map(id => `/projects/${id}/`)];
 const { createHash } = require('node:crypto');
+const expectedEmail = 'hello@atharvabhorpe.com';
+const retiredEmail = 'atharva.r.bhorpe@gmail.com';
+// PDF text/link/redaction validation precedes this immutable reviewed-byte fixture.
+for (const file of fs.readdirSync(path.join(root,'dist'),{recursive:true,withFileTypes:true})) {
+  if (file.isFile() && /\.(html|js|css|json|txt)$/.test(file.name)) {
+    assert(!fs.readFileSync(path.join(file.parentPath,file.name),'utf8').includes(retiredEmail), 'Retired email must not enter public output');
+  }
+}
 const approvedAssets = {
   'fonts/cabinet-grotesk.woff2':'f71103771c9e32406026b6ea46c7e57cb977d5884e70d0f1beeab91ab2c7abb6',
   'fonts/satoshi.woff2':'e739aff9b4d02c264341d6d4872edcda28e79373aeda936f659566a1cd3eb47f',
   'fonts/Fontshare-FFL.txt':'145e7fe2429a3336ba215c070ef722000e01348a3e1baaa127e871bb5012f554',
   'images/portrait.png':'614a5de87e5d9da6005f7fddf48a99fe9a4ad3a7cd395835b766997a940cda8c',
-  'resume.pdf':'0cabe96961dbe3d688c7af01431eee596f48c051d031a4ea27c6ef397bce3b54',
+  'resume.pdf':'b8fc7f6da33ace2689c77aabd2b6fb23ce61c25806e1693a721d55ee3894bc26',
 };
 for (const [file,hash] of Object.entries(approvedAssets)) assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,'public',file))).digest('hex'), hash, file);
 const css = fs.readFileSync(path.join(root,'src/styles/theme.css'),'utf8');
@@ -111,6 +119,9 @@ for (const mode of ['light','dark']) {
         assert.equal(await page.locator('.controls,.preview-chrome,.note,.preview-settings').count(), 0);
         assert.equal(await page.locator('.resume-link').count(),route==='/'?3:2);
         assert.equal(await page.getByRole('button',{name:'Resume',includeHidden:true}).count(),0);
+        assert(await page.locator('.copy-email').evaluateAll((nodes,email)=>nodes.length===2&&nodes.every(n=>n.dataset.email===email),expectedEmail));
+        assert(await page.locator('.email-fallback input').evaluateAll((nodes,email)=>nodes.every(n=>n.value===email),expectedEmail));
+        assert(await page.locator('a[href^="mailto:"]').evaluateAll((nodes,email)=>nodes.every(n=>n.getAttribute('href')==='mailto:'+email),expectedEmail));
         assert(await page.locator('.resume-link').evaluateAll(nodes=>nodes.every(a=>a.tagName==='A'&&a.getAttribute('href')==='/resume.pdf'&&a.target==='_blank'&&a.rel.includes('noopener'))));
         const ids = await page.locator('aside [data-section]').evaluateAll(nodes => nodes.map(n=>n.dataset.section));
         const len = await page.evaluate(() => history.length);
@@ -214,12 +225,16 @@ for (const mode of ['light','dark']) {
     await page.keyboard.press('Escape');
     for (const result of ['success','denied','unsupported']) {
       await theme();
-      await page.evaluate(result=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:result==='unsupported'?undefined:{writeText:async()=>{if(result==='denied') throw Error('Denied');}}}), result);
+      await page.evaluate(result=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:result==='unsupported'?undefined:{writeText:async text=>{window.copiedEmail=text;if(result==='denied') throw Error('Denied');}}}), result);
       await page.locator('#contact-menu .copy-email').click();
       await page.waitForFunction(()=>document.querySelector('#contact-menu .copy-status').textContent.length>0);
       const text=await page.locator('#contact-menu .copy-status').textContent();
       assert.equal(text.includes('Email copied.'), result==='success');
-      if (result!=='success') assert(await page.locator('#contact-menu input').evaluate(e=>e===document.activeElement && e.readOnly && e.selectionEnd===e.value.length));
+      if (result==='success') assert.equal(await page.evaluate(()=>window.copiedEmail),expectedEmail);
+      else {
+        assert.equal(await page.locator('#contact-menu input').inputValue(),expectedEmail);
+        assert(await page.locator('#contact-menu input').evaluate(e=>e===document.activeElement && e.readOnly && e.selectionEnd===e.value.length));
+      }
       await page.keyboard.press('Escape');
     }
     await theme(); await page.mouse.click(8,8);

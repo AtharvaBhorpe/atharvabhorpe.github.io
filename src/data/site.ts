@@ -1,6 +1,6 @@
 export const profile = {
   name: 'Atharva Bhorpe',
-  email: 'atharva.r.bhorpe@gmail.com',
+  email: 'hello@atharvabhorpe.com',
   github: 'https://github.com/AtharvaBhorpe',
   linkedin: 'https://linkedin.com/in/atharvabhorpe',
   writing: 'https://atharva-bhorpe.super.site/tutorials',
