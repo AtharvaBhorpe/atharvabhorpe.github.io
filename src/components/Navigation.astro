@@ -18,6 +18,7 @@ const { detail = false, sections, backHref = '/#projects', backLabel = 'Projects
   <Theme />
 </aside>
 <div class="phone-dock">
+  {detail && <p class="section-scroll-hint" hidden>Sections · swipe ↔</p>}
   <nav aria-label={detail ? 'Project sections' : 'Phone navigation'}>
     {sections.map(section => <a href={`#${section.id}`} data-section={section.id}>
       {section.icon && <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={section.icon} /></svg>}

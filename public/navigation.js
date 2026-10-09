@@ -41,6 +41,16 @@
     window.updateNavigation();
   }
   document.addEventListener('DOMContentLoaded', () => {
+    const hint = document.querySelector('.section-scroll-hint');
+    if (hint) {
+      const nav = document.querySelector('.phone-dock nav');
+      const observer = new ResizeObserver(() => {
+        hint.hidden = nav.clientWidth === 0 || nav.scrollWidth <= nav.clientWidth + 1;
+      });
+      observer.observe(nav);
+      // Link widths also change after fonts load or the active section changes.
+      nav.querySelectorAll('a').forEach(link => observer.observe(link));
+    }
     margins();
     links().forEach(link => link.addEventListener('click', event => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || (link.target && link.target.toLowerCase() !== '_self')) return;

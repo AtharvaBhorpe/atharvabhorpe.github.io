@@ -1,11 +1,16 @@
 /* Approved geometry retained; only production media/content treatments added. */
 .home-page .intro h1{font:400 var(--text-display)/1.2 var(--font-display);letter-spacing:-.6px;max-width:640px;overflow-wrap:anywhere}
-.home-page .thumbnail{display:block;object-fit:cover;padding:0;border:1px solid var(--color-rule);border-radius:var(--radius-portrait);height:100%;min-height:160px}
+.home-page .thumbnail{display:block;object-fit:contain;padding:0;border:1px solid var(--color-rule);border-radius:var(--radius-portrait);height:auto;min-height:0;align-self:start}
 .home-page .no-image{grid-template-columns:minmax(0,1fr)}
 .home-page .writing-head a{color:var(--color-accent);font-size:13px;display:inline-flex;align-items:center;min-height:44px;white-space:nowrap}
-.home-page a.writing-row{color:inherit;text-decoration:none;border-radius:var(--space-xs);min-height:44px}
-.home-page a.writing-row:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
-.home-page a.writing-row:hover{background:var(--surface-hover)}
+.home-page :is(.intro-contact,.writing-head) a{text-underline-offset:4px}
+.home-page :is(.intro-contact,.writing-head) a:focus-visible{outline:3px solid var(--focus-ring);outline-offset:4px}
+.home-page :is(.intro-contact,.writing-head) a:active,.detail-page .links a:active{background:var(--surface-hover)}
+@media(hover:hover){.home-page :is(.intro-contact,.writing-head) a:hover{text-decoration-thickness:2px}}
+.home-page a.writing-row{position:relative;color:inherit;text-decoration:none;border-top-color:transparent;border-radius:var(--radius-panel);min-height:44px;padding-inline:var(--row-inset);margin-inline:calc(-1 * var(--row-inset))}
+.home-page a.writing-row:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;background:var(--surface-hover)}
+.home-page a.writing-row:active{background:var(--surface-hover)}
+@media(hover:hover){.home-page a.writing-row:hover{background:var(--surface-hover)}}
 .detail-page .cover{display:block;padding:0;border:0;aspect-ratio:auto;background:none;text-align:left}
 .detail-page .cover img,.detail-page .cover video,.detail-page .prose img{display:block;width:100%;height:auto;border-radius:var(--space-xs)}
 .detail-page .cover video{background:var(--surface-placeholder)}
@@ -19,7 +24,13 @@
 .prose h2:first-child{margin-top:0}
 .prose h3{margin-bottom:var(--space-xs)}
 .detail-page .facts{margin-bottom:var(--space-lg)}
-@container content (max-width:500px){.home-page .thumbnail{height:auto;min-height:0;aspect-ratio:3/2}}
+/* Navigation stays visible without competing with the project content. */
+body :is(.rail,.sections,.phone-dock){--selection-bg:var(--surface-panel);--selection-text:var(--text-primary)}
+body :is(.rail,.sections,.phone-dock) a[aria-current="location"]{box-shadow:none;text-decoration:underline;text-underline-offset:4px}
+.section-scroll-hint{position:absolute;bottom:calc(100% + 4px);left:12px;margin:0;padding:2px 8px;border-radius:4px;background:var(--surface-page);color:var(--text-primary);font:12px/1.5 var(--font-body)}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more){
+  body .phone-dock nav,body .contact-menu{background:var(--surface-panel);-webkit-backdrop-filter:none;backdrop-filter:none;border-color:var(--rule-control)}
+}
 @container stage (max-width:850px){.home-page .intro h1{font-size:30px}}
-@container stage (max-width:683px){.home-page .content{padding-bottom:calc(var(--control-clearance) + env(safe-area-inset-bottom,0px))}}
+@container stage (max-width:855px){.home-page .content{padding-bottom:calc(var(--control-clearance) + env(safe-area-inset-bottom,0px))}}
 @container stage (max-width:500px){.home-page .intro h1{font-size:28px}}
