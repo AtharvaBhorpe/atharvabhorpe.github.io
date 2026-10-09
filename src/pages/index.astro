@@ -8,7 +8,7 @@ import '../styles/home.css';
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 ---
 <Base home title="Robotics portfolio" description="Atharva Bhorpe's robotics projects, model development and tutorials.">
-  <div class="page-scroll" role="region" aria-label="Portfolio" tabindex="0">
+  <div class="page-scroll" role="region" aria-label="Portfolio" tabindex="-1">
     <main class="stage" aria-label="Atharva Bhorpe portfolio">
       <div class="layout">
         <Navigation sections={homeSections} />
@@ -24,21 +24,21 @@ const projects = (await getCollection('projects')).sort((a, b) => a.data.order -
             </div>
           </section>
           <section class="projects panel" aria-labelledby="projects">
-            <h2 class="section-head" id="projects" tabindex="-1">Selected projects</h2>
+            <div class="section-header"><h2 class="section-head" id="projects" tabindex="-1">Selected projects</h2></div>
             {projects.map(({ id, data: p }) => {
               const words = p.title.split(' '), lastWord = words.pop();
               const [result, ...contribution] = p.outcome.split(' · ');
               return <a class="project project-link" href={`/projects/${id}/`}>
               <h3>{words.join(' ')} <span class="title-end">{lastWord}<span class="arrow" aria-hidden="true">↗</span></span></h3>
               <div class:list={['project-body', { 'no-image': !p.image && !p.demo }]}>
-                <dl class="facts"><dt>Objective</dt><dd>{p.objective}</dd><dt>Outcome / role</dt><dd><strong>{result}</strong> · {contribution.join(' · ')}</dd><dt>Tools</dt><dd>{p.tools}</dd></dl>
+                <dl class="facts"><dt>Objective</dt><dd>{p.objective}</dd><dt>Details / role</dt><dd><strong>{result}</strong> · {contribution.join(' · ')}</dd><dt>Tools</dt><dd>{p.tools}</dd></dl>
                 {(p.image || p.demo) && <img class="thumbnail" src={p.thumbnail || p.demo?.poster || p.image} alt={p.thumbnailAlt || p.imageAlt || `Project visual for ${p.title}`} loading="lazy" />}
               </div>
             </a>;
             })}
           </section>
           <section class="writing panel" aria-labelledby="writing">
-            <div class="writing-head"><h2 id="writing" tabindex="-1">Writing</h2><a href={profile.writing}>All writing →</a></div>
+            <div class="writing-head section-header"><h2 class="section-head" id="writing" tabindex="-1">Writing</h2><a href={profile.writing}>All writing →</a></div>
             {writing.map(entry => <a class="writing-row" href={entry.url}><span class="kind">{entry.kind}</span><span>{entry.title}</span></a>)}
           </section>
           <footer><span>Aachen, Germany</span></footer>

@@ -106,9 +106,41 @@ for (const mode of ['light','dark']) {
       if (!s.clamped) assert(Math.abs((s.nested?s.headingTop:s.panelTop)-s.top-8)<=1, 'Exact 8px landing '+JSON.stringify(s));
       assert.equal(s.active, s.clamped?s.last:id, JSON.stringify(s));
     }
+    for (const mode of ['light','dark']) {
+      await page.goto(origin+'/?theme='+mode);
+      await page.locator('.page-scroll').focus();
+      for (const key of ['Backspace','Delete']) {
+        await page.keyboard.press(key);
+        assert.equal(await page.locator('.page-scroll').evaluate(e=>getComputedStyle(e).outlineStyle),'none');
+      }
+      await page.keyboard.press('ArrowDown');
+      await page.waitForFunction(()=>document.querySelector('.page-scroll').scrollTop>0);
+      await page.keyboard.press('Tab');
+      assert(await page.evaluate(()=>document.activeElement.matches('a,button,select') && getComputedStyle(document.activeElement).outlineStyle!=='none'), 'Keyboard controls retain visible focus');
+      assert(await page.locator('.writing-row').evaluateAll(rows=>{
+        const rule=getComputedStyle(document.querySelector('.project'),'::before');
+        return rows.every(e=>{
+          const s=getComputedStyle(e,'::before');
+          return s.borderTopWidth===rule.borderTopWidth && s.borderTopStyle===rule.borderTopStyle && s.borderTopColor===rule.borderTopColor && s.left===rule.left && s.right===rule.right;
+        });
+      }), 'Writing uses the same straight 1px separators as Projects');
+      for (const width of [375,1440]) {
+        await page.setViewportSize({width,height:900});
+        const hoverStyles = [];
+        for (const selector of ['.project-link','.writing-row']) {
+          const row=page.locator(selector).first();
+          await row.hover();
+          hoverStyles.push(await row.evaluate(e=>{
+            const s=getComputedStyle(e);
+            return [s.backgroundColor,s.borderRadius,s.paddingLeft,s.paddingRight,s.marginLeft,s.marginRight];
+          }));
+        }
+        assert.deepEqual(hoverStyles[1],hoverStyles[0], 'Writing and Projects share hover fill, radius and horizontal padding');
+      }
+    }
     for (const route of pages) {
       assert.equal((await fetch(origin+route)).status, 200);
-      for (const [width,height] of [[320,900],[375,900],[414,900],[768,900],[1440,900],[852,393],[320,480],[375,300],[1440,393]]) {
+      for (const [width,height] of [[320,900],[375,900],[414,900],[599,900],[768,900],[903,900],[904,900],[1440,900],[852,393],[320,480],[375,300],[1440,393]]) {
         await page.setViewportSize({ width,height });
         await page.goto(origin+route+'?theme=light');
         await page.evaluate(() => document.fonts.ready);
@@ -116,6 +148,8 @@ for (const mode of ['light','dark']) {
         assert.equal(await page.locator('h1').count(), 1);
         if(width===1440 && height===900) await verifyFonts(route);
         assert(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth));
+        assert.equal(await page.locator('.phone-dock').isVisible(), width < 904, 'Shared compact navigation breakpoint');
+        if (width < 904) assert.equal(await page.locator('.panel').first().evaluate(e=>Math.round(e.getBoundingClientRect().left)), width<=500?12:24, 'Shared compact panel gutters');
         assert.equal(await page.locator('.controls,.preview-chrome,.note,.preview-settings').count(), 0);
         assert.equal(await page.locator('.resume-link').count(),route==='/'?3:2);
         assert.equal(await page.getByRole('button',{name:'Resume',includeHidden:true}).count(),0);
@@ -123,6 +157,34 @@ for (const mode of ['light','dark']) {
         assert(await page.locator('.email-fallback input').evaluateAll((nodes,email)=>nodes.every(n=>n.value===email),expectedEmail));
         assert(await page.locator('a[href^="mailto:"]').evaluateAll((nodes,email)=>nodes.every(n=>n.getAttribute('href')==='mailto:'+email),expectedEmail));
         assert(await page.locator('.resume-link').evaluateAll(nodes=>nodes.every(a=>a.tagName==='A'&&a.getAttribute('href')==='/resume.pdf'&&a.target==='_blank'&&a.rel.includes('noopener'))));
+        if (route === '/') {
+          const hierarchy = await page.evaluate(() => {
+            const size = selector => parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
+            return [size('h1'), size('#projects'), size('.project h3'), size('#writing')];
+          });
+          assert(hierarchy[0] > hierarchy[1] && hierarchy[1] > hierarchy[2]);
+          assert.equal(hierarchy[1], hierarchy[3]);
+          assert(await page.evaluate(()=>{
+            const gap=(row,heading)=>document.querySelector(row).getBoundingClientRect().top-document.querySelector(heading).getBoundingClientRect().bottom;
+            return Math.abs(gap('.project','#projects')-gap('.writing-row','#writing'))<1;
+          }), 'Section heading-to-divider spacing matches');
+          assert.equal(await page.getByText('Outcome / role', {exact:true}).count(), 0);
+          for (const image of await page.locator('.thumbnail').all()) {
+            await image.scrollIntoViewIfNeeded();
+            await image.evaluate(e => e.decode());
+            assert(await image.evaluate(e => {
+              const r = e.getBoundingClientRect();
+              const facts = e.parentElement.querySelector('.facts').getBoundingClientRect();
+              return Math.abs(r.width / r.height - e.naturalWidth / e.naturalHeight) < .03
+                && (getComputedStyle(e.parentElement).gridTemplateColumns.split(' ').length !== 1 || facts.bottom <= r.top);
+            }), 'Diagrams preserve their aspect ratio and follow facts in single-column layouts');
+          }
+        } else {
+          await page.waitForFunction(()=>{
+            const nav=document.querySelector('.phone-dock nav'), hint=document.querySelector('.section-scroll-hint');
+            return hint.hidden === (nav.clientWidth===0 || nav.scrollWidth<=nav.clientWidth+1);
+          });
+        }
         const ids = await page.locator('aside [data-section]').evaluateAll(nodes => nodes.map(n=>n.dataset.section));
         const len = await page.evaluate(() => history.length);
         for (const id of ids) {
@@ -160,6 +222,37 @@ for (const mode of ['light','dark']) {
       for (const id of ids) { await page.goto(origin+route+'?theme=light#'+id); await page.evaluate(()=>document.fonts.ready); await landing(id); }
       console.log(`PASS ${route}: widths, light/dark, click/Enter, headings, fragments, dock clearance`);
     }
+    for (const route of ['/','/projects/tiny-recursive-model/']) for (const mode of ['light','dark']) {
+      await page.setViewportSize({width:375,height:900});
+      await page.goto(origin+route+'?theme='+mode);
+      await page.locator('.say-hi').click();
+      for (const [name,value] of [['prefers-reduced-transparency','reduce'],['prefers-contrast','more']]) {
+        await cdp.send('Emulation.setEmulatedMedia',{features:[{name,value}]});
+        await page.waitForFunction(()=>[...document.querySelectorAll('.phone-dock nav,.contact-menu')].every(e=>{
+          const s=getComputedStyle(e);
+          return s.backdropFilter==='none' && s.backgroundColor.startsWith('rgb(');
+        }));
+      }
+      await cdp.send('Emulation.setEmulatedMedia',{features:[]});
+      await page.keyboard.press('Escape');
+    }
+    await page.goto(origin+'/?theme=dark');
+    const textLinkStyles=[];
+    for (const selector of ['.intro-contact a','.writing-head a']) {
+      const link=page.locator(selector).first();
+      await page.keyboard.press('Tab'); await link.focus();
+      textLinkStyles.push(await link.evaluate(e=>{const s=getComputedStyle(e);return [s.outline,s.outlineOffset,s.textUnderlineOffset];}));
+    }
+    assert.deepEqual(textLinkStyles[0],textLinkStyles[1], 'Homepage text links share keyboard focus and underline styling');
+    const pressedColors=[];
+    for (const [route,selector] of [['/','.intro-contact a'],['/','.writing-head a'],['/projects/tiny-recursive-model/','.links a']]) {
+      await page.goto(origin+route+'?theme=dark');
+      const link=page.locator(selector).first();
+      await link.hover(); await page.mouse.down();
+      pressedColors.push(await link.evaluate(e=>getComputedStyle(e).backgroundColor));
+      await page.mouse.move(1,1); await page.mouse.up();
+    }
+    assert(pressedColors.every(color=>color===pressedColors[0] && color!=='rgba(0, 0, 0, 0)'), 'Text links share visible pointer-down feedback');
     await page.emulateMedia({reducedMotion:'reduce'});
     for (const width of [320,375,1440]) {
       await page.setViewportSize({width,height:width===1440?900:600});
