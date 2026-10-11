@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import Navigation from '../components/Navigation.astro';
 import { getCollection } from 'astro:content';
 import { profile, homeSections } from '../data/site';
-import { writing } from '../data/writing';
+import WritingList from '../components/WritingList.astro';
 import '../styles/home.css';
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 ---
@@ -39,7 +39,7 @@ const projects = (await getCollection('projects')).sort((a, b) => a.data.order -
           </section>
           <section class="writing panel" aria-labelledby="writing">
             <div class="writing-head section-header"><h2 class="section-head" id="writing" tabindex="-1">Writing</h2><a href={profile.writing}>All writing →</a></div>
-            {writing.map(entry => <a class="writing-row" href={entry.url}><span class="kind">{entry.kind}</span><span>{entry.title}</span></a>)}
+            <WritingList />
           </section>
           <footer><span>Aachen, Germany</span></footer>
         </div>

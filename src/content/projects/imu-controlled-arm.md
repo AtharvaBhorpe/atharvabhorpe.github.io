@@ -8,7 +8,7 @@ tools: ROS 2 Humble · MoveIt · ESP32 · Arduino
 role: Sensor-input and robot-control integration
 sources:
   - label: Project tutorial
-    url: https://atharva-bhorpe.super.site/tutorials/rss-project-hub
+    url: /writing/robotic-arm-control-imu/
   - label: Project repository
     url: https://github.com/AtharvaBhorpe/kinova_gen3_moveit_servo
 ---

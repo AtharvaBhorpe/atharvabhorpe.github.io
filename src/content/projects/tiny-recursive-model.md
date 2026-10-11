@@ -16,7 +16,7 @@ demo:
   poster: /images/trm-demo-poster.jpg
   width: 1920
   height: 1200
-  sourceUrl: https://assets.super.so/7997a771-cb65-464f-bda6-2d05b8195df6/videos/7b3851b8-7d05-4663-86c5-4cf866e05e98/export-1780311693409.mp4
+  sourceUrl: /media/trm-training-and-path-demo.mp4
   description: 'Silent recording from the published tutorial: Rerun training metrics, then predicted and ground-truth paths on one grid. Not independently reproduced for this portfolio.'
 imageAlt: Illustrated occupancy-grid path planning from the published TRM tutorial
 caption: Illustration from the published tutorial; not an independently reproduced evaluation.
@@ -28,7 +28,7 @@ sources:
   - label: Project README
     url: https://github.com/AtharvaBhorpe/trm-pathplanning/blob/main/README.md
   - label: Published tutorial
-    url: https://atharva-bhorpe.super.site/tutorials/teaching-a-tiny-recursive-model-to-plan-paths
+    url: /writing/teaching-a-tiny-recursive-model-to-plan-paths/
 ---
 <section class="panel prose">
 

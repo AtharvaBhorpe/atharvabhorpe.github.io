@@ -40,7 +40,7 @@ const sections = [
         <slot />
         <section class="panel" aria-labelledby="resources">
           <h2 id="resources" tabindex="-1">Sources and evidence</h2>
-          {sources.length ? <nav class="links" aria-label="Project resources">{sources.map(source => <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} ↗</a>)}</nav> : <p class="source">{evidence || 'Source: supplied résumé. Public code, challenge evaluation and demonstration links have not been supplied.'}</p>}
+          {sources.length ? <nav class="links" aria-label="Project resources">{sources.map(source => <a href={source.url} target={source.url.startsWith('http') ? '_blank' : undefined} rel={source.url.startsWith('http') ? 'noopener noreferrer' : undefined}>{source.label}{source.url.startsWith('http') ? ' ↗' : ''}</a>)}</nav> : <p class="source">{evidence || 'Source: supplied résumé. Public code, challenge evaluation and demonstration links have not been supplied.'}</p>}
         </section>
         <a class="back" href="/#projects">← Back to projects</a>
       </main>

@@ -59,10 +59,166 @@ for (const mode of ['light','dark']) {
       if (i===99) throw new Error(serverLog);
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    browser = await chromium.launch({ executablePath:process.env.CHROME_BIN || '/usr/bin/google-chrome', headless:true, ignoreDefaultArgs:['--disable-back-forward-cache'] });
+    browser = await chromium.launch({ executablePath:process.env.CHROME_BIN || '/usr/bin/google-chrome', headless:true, ignoreDefaultArgs:['--disable-back-forward-cache','--hide-scrollbars'] });
     const page = await browser.newPage();
     page.setDefaultTimeout(6000);
     const errors = [], landings = [], fontRendering = [];
+    for (const width of [375,904,1440]) for (const mode of ['light','dark']) {
+      await page.setViewportSize({width,height:900});
+      const states=[];
+      for (const route of ['/','/writing/']) {
+        await page.goto(origin+route+'?theme='+mode); await page.evaluate(()=>document.fonts.ready);
+        const row=page.locator('.writing-row').first();
+        const geometry=await page.evaluate(()=>{
+          const rail=document.querySelector('aside').getBoundingClientRect(),panel=document.querySelector('.panel').getBoundingClientRect();
+          return {railX:rail.x,panelX:panel.x,panelWidth:panel.width};
+        });
+        const styles=[];
+        for (const state of ['hover','focus','pressed']) {
+          if(state==='hover') await row.hover();
+          if(state==='focus') {await page.mouse.move(0,0); await row.focus();}
+          if(state==='pressed') {await row.hover(); await page.mouse.down();}
+          styles.push(await row.evaluate(e=>{
+            const s=getComputedStyle(e),line=getComputedStyle(e,'::before');
+            return {columns:s.gridTemplateColumns,gap:s.gap,padding:s.padding,margin:s.margin,border:s.borderTopColor,radius:s.borderRadius,background:s.backgroundColor,font:s.font,line:line.borderTop,edge:line.borderRadius,inset:line.left,outline:s.outline};
+          }));
+          if(state==='pressed') {await page.mouse.move(0,0); await page.mouse.up();}
+        }
+        states.push({geometry,styles});
+      }
+      assert.deepEqual(states[1],states[0],`Writing rows and page alignment match at ${width}px in ${mode}`);
+      assert.equal(states[1].styles[0].edge,'0px','Separators remain straight');
+    }
+    const motionPage=await browser.newPage();
+    for(const route of ['/','/writing/install-isaac-lab-in-5-minutes-with-pixi/']) for(const width of [375,1440]) for(const reducedMotion of ['reduce','no-preference']) {
+      await motionPage.setViewportSize({width,height:900}); await motionPage.emulateMedia({reducedMotion});
+      await motionPage.goto(origin+route); await motionPage.evaluate(()=>document.fonts.ready);
+      const id=route==='/'?'projects':await motionPage.locator('.prose h2').nth(1).getAttribute('id');
+      await motionPage.evaluate(()=>{
+        const region=document.querySelector('.page-scroll'), scroller=region || window;
+        const original=scroller.scrollTo.bind(scroller);
+        scroller.scrollTo=options=>{
+          window.scrollRequest=options;
+          window.scrollStart=region?region.scrollTop:scrollY;
+          original(options);
+        };
+      });
+      const scope=await motionPage.locator('.phone-dock').isVisible()?'.phone-dock':'aside';
+      await motionPage.locator(`${scope} [data-section="${id}"]`).focus();
+      await motionPage.keyboard.press('Enter');
+      assert.equal(await motionPage.evaluate(()=>scrollRequest.behavior),reducedMotion==='reduce'?'instant':'smooth');
+      if(reducedMotion==='no-preference') await motionPage.waitForFunction(()=>{
+        const top=document.querySelector('.page-scroll')?.scrollTop ?? scrollY;
+        return top>scrollStart && top<scrollRequest.top-1;
+      });
+      await motionPage.waitForFunction(()=>Math.abs((document.querySelector('.page-scroll')?.scrollTop ?? scrollY)-Math.max(0,scrollRequest.top))<1);
+      assert.equal(await motionPage.evaluate(()=>document.activeElement.id),id);
+      assert.equal(new URL(motionPage.url()).hash,'#'+id);
+      if(route!=='/') assert(Math.abs(await motionPage.locator('#'+id).evaluate(e=>e.getBoundingClientRect().top)-8)<1,'Article scroll lands on the selected heading');
+      if(route==='/') {
+        await motionPage.locator(`${scope} .home-link`).focus();
+        await motionPage.keyboard.press('Enter');
+        assert.equal(await motionPage.evaluate(()=>scrollRequest.behavior),reducedMotion==='reduce'?'instant':'smooth');
+        await motionPage.waitForFunction(()=>Math.abs(document.querySelector('.page-scroll').scrollTop-Math.max(0,scrollRequest.top))<1);
+        assert.equal(await motionPage.evaluate(()=>document.activeElement.id),'home');
+        assert.equal(new URL(motionPage.url()).hash,'#home');
+      }
+    }
+    await motionPage.close();
+    const homePage=await browser.newPage();
+    homePage.on('pageerror',e=>errors.push(e.message));
+    await homePage.emulateMedia({reducedMotion:'reduce'});
+    const homeRoutes=['/',pages[1],'/writing/','/writing/so-arm100101-lerobot-isaac-sim/','/writing/install-isaac-lab-in-5-minutes-with-pixi/'];
+    for(const route of homeRoutes) for(const width of [320,375,904,1440]) {
+      await homePage.setViewportSize({width,height:width===1440?450:900});
+      await homePage.goto(origin+route+'?theme=dark');
+      await homePage.evaluate(()=>document.fonts.ready);
+      const compact=await homePage.locator('.phone-dock').isVisible();
+      const shortcut=homePage.locator(compact?'.phone-dock>.home-link':'aside>.home-link');
+      assert.equal((await shortcut.textContent()).trim(),'Atharva Bhorpe');
+      assert.equal(await shortcut.evaluate(e=>getComputedStyle(e).textDecorationLine),'none','Name shortcut is never underlined');
+      const box=await shortcut.boundingBox();
+      assert(box.width>=44 && box.height>=44,'Home shortcut has a 44px target');
+      await homePage.evaluate(()=>{
+        const rail=document.querySelector('aside'); rail.scrollTop=rail.scrollHeight;
+        const strip=document.querySelector('.phone-dock nav'); strip.scrollLeft=strip.scrollWidth;
+      });
+      assert(await shortcut.evaluate(e=>{
+        const r=e.getBoundingClientRect();
+        return r.top>=0 && r.bottom<=innerHeight && e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+      }),route+' name remains visible above overflowing navigation');
+      if(!compact) {
+        for(const link of await homePage.locator('aside nav a').all()) {
+          await link.focus();
+          assert(await link.evaluate(e=>{
+            const r=e.getBoundingClientRect();
+            return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+          }),'Focused rail links remain visible below the sticky name');
+        }
+      }
+      if(compact) {
+        await homePage.locator('.say-hi').click();
+        assert(await homePage.locator('#contact-menu').evaluate(e=>{
+          const r=e.getBoundingClientRect(),dock=document.querySelector('.phone-dock').getBoundingClientRect();
+          return r.top>=0 && r.bottom<dock.top;
+        }),'Contact popover clears the full dock');
+        await homePage.keyboard.press('Escape');
+        await homePage.evaluate(()=>{
+          const region=document.querySelector('.page-scroll');
+          if(region) region.scrollTop=region.scrollHeight; else window.scrollTo(0,document.body.scrollHeight);
+        });
+        assert(await homePage.evaluate(()=>{
+          const main=document.querySelector('.content,.case-study'),last=main.lastElementChild;
+          return last.getBoundingClientRect().bottom<=document.querySelector('.phone-dock').getBoundingClientRect().top;
+        }),'Last content clears the full dock');
+      }
+      if([375,1440].includes(width)) await homePage.screenshot({path:path.join(out,`home-shortcut-${route==='/'?'home':route.replaceAll('/','-')}-${width}.png`)});
+      await shortcut.focus();
+      assert(await shortcut.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle!=='none'),'Home shortcut has keyboard focus');
+      await homePage.keyboard.press('Enter');
+      await homePage.waitForURL(url=>url.pathname==='/' && url.hash==='#home');
+      await homePage.waitForFunction(()=>{
+        const home=document.querySelector('#home'),region=document.querySelector('.page-scroll');
+        if(!home || !region) return false;
+        const delta=home.getBoundingClientRect().top-region.getBoundingClientRect().top;
+        return delta>=0 && delta<=9;
+      });
+      assert.equal(await homePage.locator('html').getAttribute('data-mode'),'dark');
+    }
+    for(const route of ['/','/writing/install-isaac-lab-in-5-minutes-with-pixi/']) for(const width of [375,1440]) for(const mode of ['light','dark']) {
+      await homePage.setViewportSize({width,height:900});
+      await homePage.goto(origin+route+'?theme='+mode+(route==='/'?'#projects':'#overview'));
+      await homePage.evaluate(()=>document.fonts.ready);
+      const shortcut=homePage.locator(width===375?'.phone-dock>.home-link':'aside>.home-link');
+      for(const phase of ['before','after']) {
+        const expected=await homePage.evaluate(()=>[getComputedStyle(document.querySelector('aside')).backgroundColor,getComputedStyle(document.body).color,'none','none']);
+        for(const state of ['rest','hover','pressed','keyboard']) {
+          if(state==='rest') await homePage.mouse.move(0,0);
+          if(state==='hover') await shortcut.hover();
+          if(state==='pressed') await homePage.mouse.down();
+          if(state==='keyboard') {await homePage.keyboard.press('Tab'); await shortcut.focus();}
+          assert.deepEqual(await shortcut.evaluate(e=>{
+            const s=getComputedStyle(e); return [s.backgroundColor,s.color,s.boxShadow,s.textDecorationLine];
+          }),expected,`Plain home shortcut: ${route} ${width} ${mode} ${phase} ${state}`);
+          if(state==='pressed') {await homePage.mouse.move(0,0); await homePage.mouse.up();}
+          if(state==='keyboard') assert(await shortcut.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle!=='none'));
+        }
+        if(phase==='before') {
+          await homePage.keyboard.press('Enter');
+          await homePage.waitForURL(url=>url.pathname==='/' && url.hash==='#home');
+          await homePage.waitForFunction(()=>document.querySelector('.home-link[aria-current="location"]'));
+        }
+      }
+      assert.equal(await homePage.locator(width===375?'.phone-dock nav [aria-current]':'aside nav [aria-current]').evaluate(e=>getComputedStyle(e).textDecorationLine),'underline','Section selection remains visible');
+    }
+    await homePage.goto(origin+'/#home');
+    await homePage.evaluate(()=>document.fonts.ready);
+    assert(await homePage.locator('#home').evaluate(e=>{
+      const delta=e.getBoundingClientRect().top-document.querySelector('.page-scroll').getBoundingClientRect().top;
+      return delta>=0 && delta<=9;
+    }),'Initial home hash lands at the top section');
+    await homePage.close();
+    await page.emulateMedia({reducedMotion:'reduce'});
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
     async function verifyFonts(route) {
@@ -88,6 +244,14 @@ for (const mode of ['light','dark']) {
       return page.locator('aside select');
     };
     async function landing(id) {
+      await page.waitForFunction(id=>{
+        const node=document.getElementById(id), region=document.querySelector('.page-scroll');
+        const target=node.tagName==='H3'?node:node.closest('.panel') || node;
+        const scroll=region || document.scrollingElement;
+        const top=Math.max(region?.getBoundingClientRect().top || 0,visualViewport.offsetTop);
+        const expected=Math.max(0,Math.min(scroll.scrollHeight-scroll.clientHeight,scroll.scrollTop+target.getBoundingClientRect().top-top-8));
+        return Math.abs(scroll.scrollTop-expected)<=1;
+      },id);
       await settle();
       const s = await page.evaluate(id => {
         const node = document.getElementById(id), heading = id==='home' ? node.querySelector('h1') : node;
@@ -97,15 +261,25 @@ for (const mode of ['light','dark']) {
         const compact = !!dock.getClientRects().length;
         const top = Math.max(r?.top || 0, v.offsetTop), bottom = Math.min(r?.bottom || innerHeight, v.offsetTop+v.height, compact ? dock.getBoundingClientRect().top : Infinity);
         const scroll = region || document.scrollingElement;
-        return { id, width:innerWidth, height:innerHeight, top, bottom, headingTop:heading.getBoundingClientRect().top, headingBottom:heading.getBoundingClientRect().bottom, panelTop:panel.getBoundingClientRect().top, nested:node.tagName==='H3', clamped:scroll.scrollHeight>scroll.clientHeight && scroll.scrollTop+scroll.clientHeight>=scroll.scrollHeight-1, active:document.querySelector((compact?'.phone-dock':'aside')+' [aria-current]')?.dataset.section, last:[...document.querySelectorAll('aside [data-section]')].at(-1).dataset.section };
+        return { id, width:innerWidth, height:innerHeight, top, bottom, headingTop:heading.getBoundingClientRect().top, headingBottom:heading.getBoundingClientRect().bottom, panelTop:panel.getBoundingClientRect().top, nested:node.tagName==='H3', desktop:!!document.querySelector('aside.rail')?.getClientRects().length, clamped:scroll.scrollHeight>scroll.clientHeight && scroll.scrollTop+scroll.clientHeight>=scroll.scrollHeight-1, active:document.querySelector((compact?'.phone-dock':'aside')+' [aria-current]')?.dataset.section, last:[...document.querySelectorAll('aside [data-section]')].at(-1).dataset.section };
       }, id);
       landings.push(s);
       assert(s.headingTop>=s.top-1, JSON.stringify(s));
       assert(s.headingBottom<=s.bottom+1, JSON.stringify(s));
-      if (!s.nested) assert(s.panelTop>=s.top+6, JSON.stringify(s));
-      if (!s.clamped) assert(Math.abs((s.nested?s.headingTop:s.panelTop)-s.top-8)<=1, 'Exact 8px landing '+JSON.stringify(s));
+      const heroAligned = s.id==='home' && s.desktop;
+      if (!s.nested && !heroAligned) assert(s.panelTop>=s.top+6, JSON.stringify(s));
+      if (!s.clamped) assert(Math.abs((s.nested?s.headingTop:s.panelTop)-s.top-(heroAligned?0:8))<=1, 'Exact landing offset '+JSON.stringify(s));
       assert.equal(s.active, s.clamped?s.last:id, JSON.stringify(s));
     }
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(origin+'/?theme=light'); await settle();
+    const homeAlignment=await page.evaluate(()=>{
+      const nav=document.querySelector('.rail').getBoundingClientRect();
+      const about=document.querySelector('.intro').getBoundingClientRect();
+      return {nav:{top:nav.top,bottom:nav.bottom,height:nav.height},about:{top:about.top,bottom:about.bottom,height:about.height}};
+    });
+    assert(Math.abs(homeAlignment.nav.top-homeAlignment.about.top)<=1, 'Desktop navigation rail and About panel top edges align: '+JSON.stringify(homeAlignment));
+    assert(homeAlignment.about.height<350, 'About panel stays compact rather than filling the viewport: '+JSON.stringify(homeAlignment));
     for (const mode of ['light','dark']) {
       await page.goto(origin+'/?theme='+mode);
       await page.locator('.page-scroll').focus();
@@ -148,8 +322,13 @@ for (const mode of ['light','dark']) {
         assert.equal(await page.locator('h1').count(), 1);
         if(width===1440 && height===900) await verifyFonts(route);
         assert(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth));
-        assert.equal(await page.locator('.phone-dock').isVisible(), width < 904, 'Shared compact navigation breakpoint');
-        if (width < 904) assert.equal(await page.locator('.panel').first().evaluate(e=>Math.round(e.getBoundingClientRect().left)), width<=500?12:24, 'Shared compact panel gutters');
+        const gutter=await page.evaluate(()=>{
+          const region=document.querySelector('.page-scroll');
+          return region ? region.offsetWidth-region.clientWidth : innerWidth-document.documentElement.getBoundingClientRect().width;
+        });
+        const compact=width-gutter<904;
+        assert.equal(await page.locator('.phone-dock').isVisible(), compact, 'Shared compact navigation breakpoint excludes scrollbar space');
+        if (compact) assert.equal(await page.locator('.panel').first().evaluate(e=>Math.round(e.getBoundingClientRect().left)), (width<=500?12:24)+gutter/2, 'Shared compact panel gutters');
         assert.equal(await page.locator('.controls,.preview-chrome,.note,.preview-settings').count(), 0);
         assert.equal(await page.locator('.resume-link').count(),route==='/'?3:2);
         assert.equal(await page.getByRole('button',{name:'Resume',includeHidden:true}).count(),0);
@@ -278,6 +457,9 @@ for (const mode of ['light','dark']) {
     await page.goto(origin);
     assert.equal(await page.locator('video,iframe').count(),0);
     assert.equal(await page.locator('.writing-row').filter({hasText:'SO-ARM101 in Isaac Sim + ROS 2 + MoveIt 2'}).getAttribute('href'),'https://www.youtube.com/watch?v=0vvhCdKZyQE');
+    const homeHtml=fs.readFileSync(path.join(root,'dist/index.html'),'utf8');
+    assert.equal((homeHtml.match(/class="writing-row" href="\/writing\//g)||[]).length,4);
+    assert.equal(new URL(await page.locator('.writing-head a').getAttribute('href'),origin).pathname,'/writing/');
     await page.evaluate(()=>localStorage.removeItem('portfolio-approved-theme'));
     await page.emulateMedia({ colorScheme:'light' }); await page.goto(origin);
     assert.equal(await page.locator('html').getAttribute('data-mode'), 'system');
@@ -287,7 +469,7 @@ for (const mode of ['light','dark']) {
     assert.equal(await page.locator('html').getAttribute('data-resolved'), 'light');
     await page.keyboard.press('Escape'); await page.reload();
     assert.equal(await page.locator('html').getAttribute('data-mode'), 'light');
-    await (await nav()).locator('[data-section="projects"]').click();
+    await (await nav()).locator('[data-section="projects"]').click(); await landing('projects');
     const row = page.locator('.project-link').first();
     assert.equal(await row.locator('a,button').count(), 0);
     assert.equal(new URL(await row.getAttribute('href'),origin).pathname, '/projects/tiny-recursive-model/');
@@ -340,6 +522,77 @@ for (const mode of ['light','dark']) {
     assert(await page.locator('aside').evaluate(e=>e.contains(document.activeElement)));
     await page.setViewportSize({width:375,height:600}); await settle();
     assert(await page.locator('.phone-dock').evaluate(e=>e.contains(document.activeElement)));
+    const codePage=await browser.newPage({viewport:{width:375,height:900}});
+    await codePage.addInitScript(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedCode=text;}}}));
+    await codePage.goto(origin+'/writing/install-isaac-lab-in-5-minutes-with-pixi/');
+    const firstBlock=codePage.locator('.code-block').first();
+    await firstBlock.waitFor();
+    assert.equal(await codePage.locator('.code-block').count(),await codePage.locator('.prose pre').count());
+    assert.equal(await firstBlock.locator('.code-language').textContent(),'sh');
+    assert(await firstBlock.getByRole('button').evaluate(e=>e.getBoundingClientRect().width>=44 && e.getBoundingClientRect().height>=44),'Mobile copy target remains at least 44px');
+    await codePage.setViewportSize({width:1280,height:900});
+    assert(await firstBlock.locator('.code-toolbar').evaluate(e=>e.getBoundingClientRect().height<=36),'Desktop code toolbar stays compact');
+    await codePage.setViewportSize({width:375,height:900});
+    const originalCode=await firstBlock.locator('code').textContent();
+    await firstBlock.getByRole('button').focus(); await codePage.keyboard.press('Enter');
+    await codePage.waitForFunction(()=>document.querySelector('.code-copy-status').textContent==='Copied.');
+    assert.equal(await codePage.evaluate(()=>window.copiedCode),originalCode,'Copies exact code, not the toolbar or highlighted HTML');
+    await codePage.evaluate(()=>{navigator.clipboard.writeText=async()=>{throw new DOMException('Denied','NotAllowedError');};});
+    await firstBlock.getByRole('button').click();
+    await codePage.waitForFunction(()=>document.querySelector('.code-copy-status').textContent.includes('Copy unavailable'));
+    assert(await firstBlock.getByRole('button').isEnabled(),'Copy failure permits retry');
+    await codePage.evaluate(()=>Object.defineProperty(navigator,'clipboard',{value:undefined}));
+    await firstBlock.getByRole('button').click();
+    await codePage.waitForFunction(()=>document.querySelector('.code-copy-status').textContent.includes('Copy unavailable'));
+    assert(await codePage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Copy failure message fits mobile');
+    await codePage.close();
+    const writingRoutes = fs.readdirSync(path.join(root,'dist/writing'),{withFileTypes:true}).filter(entry=>entry.isDirectory()).map(entry=>`/writing/${entry.name}/`).sort();
+    assert.equal(writingRoutes.length,9, 'All nine local writing guides are published');
+    for (const route of ['/writing/',...writingRoutes]) {
+      assert.equal((await fetch(origin+route)).status,200,route);
+      await page.setViewportSize({width:1280,height:900}); await page.goto(origin+route);
+      assert.equal(await page.locator('h1').count(),1,route);
+      if(route==='/writing/') {
+        await page.locator('.writing-row').first().hover();
+        const radii=await page.evaluate(()=>[getComputedStyle(document.querySelector('.panel')).borderRadius,getComputedStyle(document.querySelector('.writing-row')).borderRadius]);
+        assert.equal(radii[1],radii[0],'Writing row hover uses the panel’s rounded corners');
+      }
+      if(route!=='/writing/') {
+        const soArmChildren=['so-arm-install-setup','so-arm-import-isaac-sim','so-arm-moveit-setup'];
+        const imuChildren=['microros-setup-humble','interfacing-ir-sensor-ros2'];
+        const slug=route.split('/')[2];
+        const parent=soArmChildren.includes(slug)?'/writing/so-arm100101-lerobot-isaac-sim/':imuChildren.includes(slug)?'/writing/robotic-arm-control-imu/':'/writing/';
+        assert.deepEqual(await page.locator('.article-shell .back').evaluateAll(links=>links.map(e=>new URL(e.href).pathname)),[parent,parent,parent],route+' all back links lead to the immediate parent');
+        if(slug==='so-arm100101-lerobot-isaac-sim') {
+          assert(!/Stretch goals|Coloured soft gripper|Real2Sim|Tanay|Bharat|Sahil/.test(await page.locator('.prose').textContent()));
+          assert.equal(await page.locator('[data-section="team"],#team').count(),0);
+        }
+        const navSize=await page.locator('aside').evaluate(e=>({width:e.getBoundingClientRect().width,overflow:e.scrollWidth>e.clientWidth}));
+        assert(navSize.width>=240 && !navSize.overflow,route+' has a readable contents pane without horizontal scrolling');
+        assert(await page.locator('aside .sections a').evaluateAll(links=>links.every(e=>getComputedStyle(e).whiteSpace==='normal' && e.scrollWidth<=e.clientWidth)),route+' section names wrap without clipping');
+        for(const width of [375,904,1280]) for(const mode of ['light','dark']) {
+          await page.setViewportSize({width,height:900}); await page.goto(origin+route+'?theme='+mode);
+          assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),route+' article fits '+width);
+          assert(await page.locator('.prose pre').evaluateAll(blocks=>blocks.every(e=>{
+            const s=getComputedStyle(e);
+            return parseFloat(s.borderBottomLeftRadius)===12 && parseFloat(s.paddingLeft)===12 && parseFloat(s.lineHeight)<=21 && s.overflowX==='auto' && e.tabIndex===0;
+          })),route+' code blocks are padded, rounded, and keyboard-scrollable');
+        }
+      }
+      assert.equal(await page.locator('a[href*="super.site"],a[href*="assets.super.so"],img[src*="super.so"]').count(),0,route+' has no Super dependency');
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,route+' has no horizontal overflow');
+      assert(await page.locator('img').evaluateAll(images=>images.every(i=>i.hasAttribute('alt'))),route+' images have alt text');
+      await page.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth>0),null,{timeout:15000});
+    }
+    const generated=fs.readdirSync(path.join(root,'dist'),{recursive:true,withFileTypes:true});
+    for (const file of generated) if(file.isFile()&&/\.(html|js|css|json|txt)$/.test(file.name)) {
+      const text=fs.readFileSync(path.join(file.parentPath,file.name),'utf8');
+      assert(!/https?:\/\/(?:www\.)?(?:atharva-bhorpe\.super\.site|assets\.super\.so|s\.super\.so)/i.test(text), 'Built site has no Super URLs: '+file.name);
+    }
+    for (const asset of ['MICROROS_SETUP_INSTRUCTIONS_HUMBLE.md','setup_microros_workspace_humble.sh','microros_esp32_sensors_humble.ino']) {
+      assert(fs.statSync(path.join(root,'public/downloads/microros',asset)).size>0,asset);
+      assert.equal((await fetch(origin+'/downloads/microros/'+asset)).status,200,asset+' is downloadable');
+    }
     // Storage denial: preference survives via the actual clean-route anchor URL.
     await page.addInitScript(()=>Object.defineProperty(window,'localStorage',{get(){throw new DOMException('Denied','SecurityError');}}));
     await page.goto(origin); await (await theme()).selectOption('dark'); await page.keyboard.press('Escape');
@@ -347,6 +600,12 @@ for (const mode of ['light','dark']) {
     await (await nav()).locator('[data-section="projects"]').click(); await page.locator('.project-link').first().click();
     assert.equal(new URL(page.url()).searchParams.get('theme'),'dark');
     await page.locator('main>.back').click(); assert.equal(new URL(page.url()).pathname,'/'); await landing('projects');
+    await page.locator('.project-link').first().click();
+    await page.locator(await page.locator('.phone-dock').isVisible()?'.phone-dock>.home-link':'aside>.home-link').click();
+    await landing('home');
+    assert.equal(new URL(page.url()).pathname,'/');
+    assert.equal(new URL(page.url()).searchParams.get('theme'),'dark');
+    assert.equal(await page.locator('html').getAttribute('data-mode'),'dark');
     for (const url of ['/fonts/cabinet-grotesk.woff2','/fonts/satoshi.woff2','/fonts/Fontshare-FFL.txt','/images/portrait.png']) assert.equal((await fetch(origin+url)).status,200);
     const resume=await fetch(origin+'/resume.pdf');
     assert.equal(resume.status,200); assert(resume.headers.get('content-type').includes('application/pdf'));
