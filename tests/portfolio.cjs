@@ -21,7 +21,7 @@ const approvedAssets = {
   'fonts/cabinet-grotesk.woff2':'f71103771c9e32406026b6ea46c7e57cb977d5884e70d0f1beeab91ab2c7abb6',
   'fonts/satoshi.woff2':'e739aff9b4d02c264341d6d4872edcda28e79373aeda936f659566a1cd3eb47f',
   'fonts/Fontshare-FFL.txt':'145e7fe2429a3336ba215c070ef722000e01348a3e1baaa127e871bb5012f554',
-  'images/portrait.png':'614a5de87e5d9da6005f7fddf48a99fe9a4ad3a7cd395835b766997a940cda8c',
+  'images/portrait.png':'f2b05066195adadad70b16d800ce50ab3c304985ceead9917b8fcce031af8ab1',
   'resume.pdf':'a8204267abc9b353a25df423678245a77ec362c2da0461e66acbc6e09a4de900',
 };
 for (const [file,hash] of Object.entries(approvedAssets)) assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,'public',file))).digest('hex'), hash, file);
