@@ -6,21 +6,100 @@ import '../styles/detail.css';
 interface Props {
   title: string;
   description: string;
+  backHref?: string;
+  backLabel?: string;
   headings: { depth: number; slug: string; text: string }[];
 }
-const { title, description, headings } = Astro.props;
+const { title, description, headings, backHref = '/writing/', backLabel = 'Writing' } = Astro.props;
 const sections = [{ id:'overview', label:'Overview' }, ...headings.filter(h=>h.depth===2 || h.depth===3).map(h=>({ id:h.slug, label:h.text }))];
 ---
 <Base title={title} description={description}>
-  <div class="detail-shell">
-    <a class="back compact-back" href="/#writing">Back to writing</a>
+  <div class="detail-shell article-shell">
+    <a class="back compact-back" href={backHref}>← Back to {backLabel}</a>
     <div class="detail-layout">
-      <Navigation detail sections={sections} backHref="/#writing" backLabel="Writing" />
+      <Navigation detail sections={sections} backHref={backHref} backLabel={backLabel} />
       <main class="case-study">
         <header class="panel"><p class="eyebrow">Atharva Bhorpe · Writing</p><h1 id="overview" tabindex="-1">{title}</h1><p class="summary">{description}</p></header>
         <slot />
-        <a class="back" href="/#writing">← Back to writing</a>
+        <a class="back" href={backHref}>← Back to {backLabel}</a>
       </main>
     </div>
   </div>
 </Base>
+<script>
+  for (const pre of document.querySelectorAll<HTMLElement>('.article-shell .prose pre')) {
+    const code = pre.querySelector('code');
+    if (!code) continue;
+    const block = document.createElement('div');
+    block.className = 'code-block';
+    const toolbar = document.createElement('div');
+    toolbar.className = 'code-toolbar';
+    const language = document.createElement('span');
+    language.className = 'code-language';
+    language.textContent = pre.dataset.language || 'text';
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg>';
+    copy.title = 'Copy code';
+    copy.setAttribute('aria-label', `Copy ${language.textContent} code`);
+    const status = document.createElement('span');
+    status.className = 'code-copy-status';
+    status.setAttribute('role', 'status');
+    toolbar.append(language, copy, status);
+    pre.before(block);
+    block.append(toolbar, pre);
+    copy.addEventListener('click', async () => {
+      copy.disabled = true;
+      status.textContent = '';
+      try {
+        await navigator.clipboard.writeText(code.textContent || '');
+        status.textContent = 'Copied.';
+      } catch {
+        status.textContent = 'Copy unavailable. Select the code and copy it manually.';
+      } finally {
+        copy.disabled = false;
+      }
+    });
+  }
+</script>
+<style is:global>
+  .article-shell{max-width:1156px}
+  .article-shell .detail-layout{grid-template-columns:248px minmax(0,1fr)}
+  .article-shell .detail-sidebar{width:248px;scrollbar-width:thin}
+  .article-shell .back{max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
+  .article-shell .sections{min-width:0}
+  .article-shell .sections a{width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.45;border-radius:var(--radius-panel);padding:10px}
+  .article-shell .prose{font-size:16px;line-height:1.75;overflow-wrap:anywhere}
+  .article-shell .prose :is(p,ul,ol,pre,blockquote,table,figure){margin:0 0 1.25em}
+  .article-shell .prose :is(ul,ol){padding-left:1.5em}
+  .article-shell .prose li+li{margin-top:.5em}
+  .article-shell .prose li>:last-child{margin-bottom:0}
+  .article-shell .prose h2{font-size:22px;line-height:1.35;margin:2em 0 .75em}
+  .article-shell .prose h3{font-size:18px;line-height:1.4;margin:1.5em 0 .65em}
+  .article-shell .prose h4{font-size:16px;margin:1.5em 0 .5em}
+  .article-shell .prose a{text-underline-offset:4px;text-decoration-thickness:1px}
+  .article-shell .prose code{font-family:var(--font-detail);font-size:.85em}
+  .article-shell .prose :not(pre)>code{padding:.15em .4em;border:1px solid var(--color-rule);border-radius:6px;background:var(--surface-navigation)}
+  .article-shell .prose pre{max-width:100%;padding:12px;border:1px solid var(--color-rule);border-radius:var(--radius-panel);overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--rule-control) transparent;color-scheme:dark;font-size:13px;line-height:1.55;overflow-wrap:normal;tab-size:2}
+  .article-shell .prose .code-block{margin:0 0 1.25em;border:1px solid var(--color-rule);border-radius:var(--radius-panel)}
+  .article-shell .code-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 8px;padding:0 8px 0 12px;border-bottom:1px solid var(--color-rule);border-radius:var(--radius-panel) var(--radius-panel) 0 0;background:var(--surface-navigation);font:12px/1.5 var(--font-detail)}
+  .article-shell .code-toolbar button{display:grid;place-items:center;min-width:32px;min-height:32px;padding:8px;border:0;border-radius:var(--space-xs);background:transparent;color:var(--text-primary);cursor:pointer}
+  @media(any-pointer:coarse),(max-width:500px){.article-shell .code-toolbar button{min-width:44px;min-height:44px}}
+  .article-shell .code-toolbar button:disabled{cursor:wait;opacity:.6}
+  .article-shell .code-toolbar button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  .article-shell .code-toolbar button:active{background:var(--surface-hover)}
+  @media(hover:hover){.article-shell .code-toolbar button:hover{background:var(--surface-hover)}}
+  .article-shell .code-copy-status{grid-column:1 / -1;padding-bottom:4px;font-family:var(--font-body)}
+  .article-shell .code-copy-status:empty{display:none}
+  .article-shell .prose .code-block pre{margin:0;border:0;border-radius:0 0 var(--radius-panel) var(--radius-panel)}
+  .article-shell .prose pre code{font-size:13px}
+  .article-shell .prose pre:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}
+  .article-shell .prose blockquote{padding:16px 20px;border-left:3px solid var(--rule-control);border-radius:var(--radius-panel);background:var(--surface-navigation)}
+  .article-shell .prose blockquote>:last-child{margin-bottom:0}
+  .article-shell .prose table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse;font-size:14px}
+  .article-shell .prose :is(th,td){padding:10px 14px;border-bottom:1px solid var(--color-rule);text-align:left}
+  .article-shell .prose th{background:var(--surface-navigation)}
+  .article-shell .prose hr{margin:2em 0;border:0;border-top:1px solid var(--color-rule)}
+  .article-shell .prose>:first-child{margin-top:0}
+  .article-shell .prose>:last-child{margin-bottom:0}
+</style>

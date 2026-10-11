@@ -2,8 +2,8 @@
 (() => {
   const links = () => [...document.querySelectorAll('[data-section]')];
   const heading = id => document.getElementById(id);
-  // Lessons is a subsection inside Results, not a separate panel.
-  const target = node => node.tagName === 'H3' ? node : node.closest('.panel') || node;
+  // Article headings and project subsections land directly; section cards include their padding.
+  const target = node => node.closest('.article-shell .prose') || node.tagName === 'H3' ? node : node.closest('.panel') || node;
   function port() {
     const region = document.querySelector('.page-scroll');
     const rect = region?.getBoundingClientRect();
@@ -32,8 +32,9 @@
     if (!node || !links().some(link => link.dataset.section === id)) return;
     const { region, top } = port();
     const delta = target(node).getBoundingClientRect().top - top - 8;
-    if (region) region.scrollTo({ top: region.scrollTop + delta, behavior: 'instant' });
-    else window.scrollTo({ top: scrollY + delta, behavior: 'instant' });
+    const behavior = focus && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'instant';
+    if (region) region.scrollTo({ top: region.scrollTop + delta, behavior });
+    else window.scrollTo({ top: scrollY + delta, behavior });
     if (focus) {
       if (!node.hasAttribute('tabindex')) node.tabIndex = -1;
       node.focus({ preventScroll: true });

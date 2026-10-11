@@ -3,14 +3,12 @@
 .home-page .thumbnail{display:block;object-fit:contain;padding:0;border:1px solid var(--color-rule);border-radius:var(--radius-portrait);height:auto;min-height:0;align-self:start}
 .home-page .no-image{grid-template-columns:minmax(0,1fr)}
 .home-page .writing-head a{color:var(--color-accent);font-size:13px;display:inline-flex;align-items:center;min-height:44px;white-space:nowrap}
-.home-page :is(.intro-contact,.writing-head) a{text-underline-offset:4px}
+.home-page :is(.intro-contact,.writing-head) a,.detail-page .links a{border-radius:var(--radius-panel);text-underline-offset:4px}
 .home-page :is(.intro-contact,.writing-head) a:focus-visible{outline:3px solid var(--focus-ring);outline-offset:4px}
 .home-page :is(.intro-contact,.writing-head) a:active,.detail-page .links a:active{background:var(--surface-hover)}
 @media(hover:hover){.home-page :is(.intro-contact,.writing-head) a:hover{text-decoration-thickness:2px}}
-.home-page a.writing-row{position:relative;color:inherit;text-decoration:none;border-top-color:transparent;border-radius:var(--radius-panel);min-height:44px;padding-inline:var(--row-inset);margin-inline:calc(-1 * var(--row-inset))}
-.home-page a.writing-row:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;background:var(--surface-hover)}
-.home-page a.writing-row:active{background:var(--surface-hover)}
-@media(hover:hover){.home-page a.writing-row:hover{background:var(--surface-hover)}}
+/* Reserve symmetric scroll gutters on the actual scroll container of each layout. */
+html:has(.detail-page),.home-page .page-scroll{scrollbar-gutter:stable both-edges}
 .detail-page .cover{display:block;padding:0;border:0;aspect-ratio:auto;background:none;text-align:left}
 .detail-page .cover img,.detail-page .cover video,.detail-page .prose img{display:block;width:100%;height:auto;border-radius:var(--space-xs)}
 .detail-page .cover video{background:var(--surface-placeholder)}
@@ -24,9 +22,22 @@
 .prose h2:first-child{margin-top:0}
 .prose h3{margin-bottom:var(--space-xs)}
 .detail-page .facts{margin-bottom:var(--space-lg)}
+/* Keep the home shortcut visible while the remaining navigation scrolls. */
+:root{--dock-stack-height:calc(var(--dock-height) + 52px)}
+body{--control-clearance:calc(var(--dock-stack-height) + 3 * var(--space-sm))}
+body :is(.rail,.detail-sidebar){scroll-padding-top:96px}
+body :is(.rail,.detail-sidebar)>.home-link{position:sticky;top:0;z-index:1;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:44px;min-width:44px;padding:8px 6px;border-radius:var(--space-xs);background:var(--surface-navigation);color:var(--text-primary);font:650 15px/1.5 var(--font-body);letter-spacing:-.2px;text-decoration:none}
+aside>.home-link::before{content:"";position:absolute;inset:-24px -16px 0;z-index:-1;background:var(--surface-navigation);pointer-events:none}
+/* The name is a home shortcut, not a selected section. */
+.home-link{--selection-bg:var(--surface-navigation);--surface-hover:var(--surface-navigation);--shadow-floating:none}
+.home-link:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
+.phone-dock{flex-wrap:wrap}
+.phone-dock>.home-link{flex:0 0 100%;min-height:44px;padding:8px 12px;border:1px solid var(--rule-control);background:var(--surface-navigation);font:650 14px/1.5 var(--font-body);box-shadow:var(--shadow-floating)}
+body .contact-menu{bottom:calc(var(--space-sm) + var(--dock-stack-height) + var(--space-xs) + env(safe-area-inset-bottom,0px));max-height:calc(100dvh - var(--dock-stack-height) - 3 * var(--space-sm) - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px))}
+@container detail (max-width:855px){.detail-page .case-study{padding-bottom:calc(var(--dock-bottom) + var(--dock-stack-height) + 2 * var(--space-sm))}.detail-page .case-study :is([tabindex],a){scroll-margin-bottom:calc(var(--dock-bottom) + var(--dock-stack-height) + var(--space-sm))}}
 /* Navigation stays visible without competing with the project content. */
 body :is(.rail,.sections,.phone-dock){--selection-bg:var(--surface-panel);--selection-text:var(--text-primary)}
-body :is(.rail,.sections,.phone-dock) a[aria-current="location"]{box-shadow:none;text-decoration:underline;text-underline-offset:4px}
+body :is(.rail,.sections,.phone-dock) a[aria-current="location"]:not(.home-link){box-shadow:none;text-decoration:underline;text-underline-offset:4px}
 .section-scroll-hint{position:absolute;bottom:calc(100% + 4px);left:12px;margin:0;padding:2px 8px;border-radius:4px;background:var(--surface-page);color:var(--text-primary);font:12px/1.5 var(--font-body)}
 @media(prefers-reduced-transparency:reduce),(prefers-contrast:more){
   body .phone-dock nav,body .contact-menu{background:var(--surface-panel);-webkit-backdrop-filter:none;backdrop-filter:none;border-color:var(--rule-control)}
@@ -34,3 +45,4 @@ body :is(.rail,.sections,.phone-dock) a[aria-current="location"]{box-shadow:none
 @container stage (max-width:850px){.home-page .intro h1{font-size:30px}}
 @container stage (max-width:855px){.home-page .content{padding-bottom:calc(var(--control-clearance) + env(safe-area-inset-bottom,0px))}}
 @container stage (max-width:500px){.home-page .intro h1{font-size:28px}}
+@media(max-height:400px){@container content (max-width:500px){.home-page .portrait{width:80px}}}

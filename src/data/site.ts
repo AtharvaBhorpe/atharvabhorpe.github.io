@@ -3,7 +3,7 @@ export const profile = {
   email: 'hello@atharvabhorpe.com',
   github: 'https://github.com/AtharvaBhorpe',
   linkedin: 'https://linkedin.com/in/atharvabhorpe',
-  writing: 'https://atharva-bhorpe.super.site/tutorials',
+  writing: '/writing/',
 };
 export const homeSections = [
   { id: 'home', label: 'Home', icon: 'm3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9' },

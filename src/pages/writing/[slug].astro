@@ -1,0 +1,17 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import Article from '../../layouts/Article.astro';
+
+export async function getStaticPaths() {
+  return (await getCollection('writing')).map(article => ({ params: { slug: article.id }, props: { article } }));
+}
+
+const { article } = Astro.props;
+const { Content, headings } = await render(article);
+const parent = article.data.parent ? await getEntry(article.data.parent) : undefined;
+if (article.data.parent && !parent) throw new Error(`Missing writing parent for ${article.id}`);
+---
+<Article title={article.data.title} description={article.data.summary} headings={headings} backHref={parent ? `/writing/${parent.id}/` : undefined} backLabel={parent?.data.title}>
+  {article.data.cover && <figure class="cover"><img src={article.data.cover} alt={article.data.coverAlt || ''} /></figure>}
+  <section class="panel prose"><Content /></section>
+</Article>

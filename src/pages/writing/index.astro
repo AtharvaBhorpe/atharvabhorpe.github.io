@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import Navigation from '../../components/Navigation.astro';
+import WritingList from '../../components/WritingList.astro';
+import '../../styles/detail.css';
+---
+<Base title="Writing" description="Robotics tutorials, project notes, and videos by Atharva Bhorpe.">
+  <div class="detail-shell">
+    <div class="detail-layout">
+      <Navigation detail sections={[{id:'overview',label:'Overview'}]} backHref="/#writing" backLabel="Portfolio" />
+      <main class="case-study">
+        <header class="panel"><p class="eyebrow">Atharva Bhorpe · Writing</p><h1 id="overview" tabindex="-1">Writing</h1><p class="summary">Robotics tutorials, project notes, and videos.</p></header>
+        <section class="panel" aria-label="Articles and videos">
+          <WritingList />
+        </section>
+      </main>
+    </div>
+  </div>
+</Base>
