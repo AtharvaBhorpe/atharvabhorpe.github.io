@@ -1,7 +1,6 @@
 ---
 title: micro-ROS Setup (ROS 2 Humble)
 summary: Set up a micro-ROS agent on a ROS 2 Humble PC and flash an ESP32 with IMU, IR sensor, and rotary-encoder code.
-order: 9
 parent: robotic-arm-control-imu
 ---
 

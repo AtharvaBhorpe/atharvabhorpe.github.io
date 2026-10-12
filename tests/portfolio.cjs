@@ -185,7 +185,7 @@ for (const mode of ['light','dark']) {
       });
       assert.equal(await homePage.locator('html').getAttribute('data-mode'),'dark');
     }
-    for(const route of ['/','/writing/install-isaac-lab-in-5-minutes-with-pixi/']) for(const width of [375,1440]) for(const mode of ['light','dark']) {
+    for(const route of ['/',pages[1],'/writing/','/writing/install-isaac-lab-in-5-minutes-with-pixi/']) for(const width of [375,1440]) for(const mode of ['light','dark']) {
       await homePage.setViewportSize({width,height:900});
       await homePage.goto(origin+route+'?theme='+mode+(route==='/'?'#projects':'#overview'));
       await homePage.evaluate(()=>document.fonts.ready);
@@ -329,7 +329,7 @@ for (const mode of ['light','dark']) {
         const compact=width-gutter<904;
         assert.equal(await page.locator('.phone-dock').isVisible(), compact, 'Shared compact navigation breakpoint excludes scrollbar space');
         if (compact) assert.equal(await page.locator('.panel').first().evaluate(e=>Math.round(e.getBoundingClientRect().left)), (width<=500?12:24)+gutter/2, 'Shared compact panel gutters');
-        assert.equal(await page.locator('.controls,.preview-chrome,.note,.preview-settings').count(), 0);
+        assert.equal(await page.locator('.controls,.preview-chrome,.note,.preview-settings,#phone,.link-pending,.footer-links,.intro h2').count(), 0);
         assert.equal(await page.locator('.resume-link').count(),route==='/'?3:2);
         assert.equal(await page.getByRole('button',{name:'Resume',includeHidden:true}).count(),0);
         assert(await page.locator('.copy-email').evaluateAll((nodes,email)=>nodes.length===2&&nodes.every(n=>n.dataset.email===email),expectedEmail));

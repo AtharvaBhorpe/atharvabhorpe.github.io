@@ -1,7 +1,6 @@
 ---
 title: Interfacing an IR Sensor with ROS 2
 summary: Wiring notes and a small Arduino test sketch for reading an IR obstacle sensor before adding ROS 2.
-order: 8
 parent: robotic-arm-control-imu
 ---
 

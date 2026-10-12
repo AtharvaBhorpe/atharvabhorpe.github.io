@@ -1,7 +1,6 @@
 ---
 title: Robotic Arm Control using IMU (RSS Project)
 summary: An ESP32-based teleoperation system that drives a simulated Kinova arm in Cartesian space using IMU, encoder, and IR sensor inputs.
-order: 7
 ---
 
 An ESP32-based teleoperation system that drives a simulated Kinova arm in Cartesian space. Sensor inputs on the ESP32 are streamed over WiFi as raw UDP via micro-ROS into ROS 2, where MoveIt turns them into real-time motion commands.

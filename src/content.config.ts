@@ -5,7 +5,7 @@ import { z } from 'astro/zod';
 
 const writing = defineCollection({
   loader: glob({ base: './src/content/writing', pattern: '*.md' }),
-  schema: z.object({ title: z.string(), summary: z.string(), order: z.number(), cover: z.string().optional(), coverAlt: z.string().optional(), parent: reference('writing').optional() }),
+  schema: z.object({ title: z.string(), summary: z.string(), cover: z.string().optional(), coverAlt: z.string().optional(), parent: reference('writing').optional() }),
 });
 
 const projects = defineCollection({

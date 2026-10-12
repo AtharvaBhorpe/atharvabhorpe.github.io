@@ -1,7 +1,6 @@
 ---
 title: Set up MoveIt 2 on SO-ARM100/101 in Isaac Sim
 summary: Create a ROS 2 Humble workspace, generate a MoveIt configuration, and test it before connecting the simulated arm.
-order: 6
 parent: so-arm100101-lerobot-isaac-sim
 ---
 

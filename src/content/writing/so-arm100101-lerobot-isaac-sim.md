@@ -1,7 +1,6 @@
 ---
 title: SO-ARM100/101 + LeRobot + Isaac Sim
 summary: Team project to simulate an SO-ARM robot, integrate LeRobot and ROS 2, and explore imitation learning and reinforcement learning.
-order: 3
 cover: /images/writing/so-arm-overview.png
 coverAlt: SO-ARM100/101, LeRobot, and Isaac Sim project thumbnail.
 ---
