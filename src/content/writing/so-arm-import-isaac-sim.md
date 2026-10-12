@@ -1,7 +1,6 @@
 ---
 title: Import SO-ARM100/101 into Isaac Sim
 summary: Import the arm URDF into Isaac Sim, add physics and ground, and connect ROS 2 with an Action Graph.
-order: 5
 parent: so-arm100101-lerobot-isaac-sim
 ---
 

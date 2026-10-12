@@ -1,7 +1,6 @@
 ---
 title: Teaching a Tiny Recursive Model to Solve Grid-Based Path Planning
 summary: 'An honest evaluation of a small recursive model for occupancy-grid path planning: where it generalizes, where it fails, and how it compares with A* and CNNs.'
-order: 1
 cover: /images/writing/trm-article.png
 coverAlt: Thumbnail for the Tiny Recursive Model path-planning article.
 ---

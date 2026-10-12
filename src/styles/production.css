@@ -22,6 +22,15 @@ html:has(.detail-page),.home-page .page-scroll{scrollbar-gutter:stable both-edge
 .prose h2:first-child{margin-top:0}
 .prose h3{margin-bottom:var(--space-xs)}
 .detail-page .facts{margin-bottom:var(--space-lg)}
+/* Shared surface roles outrank the later page styles without changing geometry. */
+body .phone-dock nav,body .contact-menu,body .email-fallback input{border-color:var(--rule-control)}
+body .thumbnail,body .cover{background:var(--surface-placeholder)}
+body .email-fallback input{background:var(--surface-input);color:var(--text-primary)}
+body .say-hi{background:var(--button-bg);color:var(--button-text);border-color:var(--button-bg)}
+body .say-hi:hover,body .say-hi:active{border-color:var(--button-edge)}
+body .project-link:active,body .project-link:focus-visible,body .phone-dock a:active,body .contact-menu :is(a,button):active,body .rail :is(a,button):active,body .sections a:active,body .contact-resources :is(a,button):active,body .detail-sidebar>.back:active{background:var(--surface-hover)}
+body .phone-dock a[aria-current]:active,body .rail a[aria-current]:active,body .sections a[aria-current]:active{background:var(--selection-bg);color:var(--selection-text)}
+@media(hover:hover){body .project-link:hover,body .phone-dock a:not([aria-current]):hover,body .contact-menu :is(a,button):not(:disabled):hover,body .rail :is(a,button):not(:disabled):not([aria-current]):hover,body .sections a:not([aria-current]):hover,body .contact-resources :is(a,button):not(:disabled):hover,body .detail-sidebar>.back:hover{background:var(--surface-hover)}body .phone-dock a[aria-current]:hover{background:var(--selection-bg);color:var(--selection-text)}}
 /* Keep the home shortcut visible while the remaining navigation scrolls. */
 :root{--dock-stack-height:calc(var(--dock-height) + 52px)}
 body{--control-clearance:calc(var(--dock-stack-height) + 3 * var(--space-sm))}

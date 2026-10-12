@@ -1,7 +1,6 @@
 ---
 title: 'Install Isaac Lab in 5 Minutes with Pixi: A Modern Approach to Robotics Development'
 summary: Use Pixi tasks to make an Isaac Lab setup more reproducible across Linux and Windows.
-order: 2
 cover: /images/writing/isaac-lab-pixi.png
 coverAlt: Article thumbnail showing the Isaac Lab setup with Pixi.
 ---

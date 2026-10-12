@@ -1,7 +1,6 @@
 ---
 title: Install & Setup — SO-ARM100/101
 summary: 'The three setup stages for the SO-ARM100/101 simulation project: ROS 2 Jazzy, Isaac Sim, and LeRobot.'
-order: 4
 parent: so-arm100101-lerobot-isaac-sim
 ---
 

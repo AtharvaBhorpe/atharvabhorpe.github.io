@@ -11,14 +11,9 @@ const severe = Object.values(report.vulnerabilities).filter(v => ['high','critic
 if (severe.length) {
   assert(Date.now() < Date.parse('2026-11-03'), 'The cache advisory exception needs a new review');
   assert(fs.readFileSync('astro.config.mjs','utf8').includes("output: 'static'"), 'Exception requires static output');
-  function inspect(dir) {
-    for (const file of fs.readdirSync(dir,{withFileTypes:true})) {
-      const name=path.join(dir,file.name);
-      if (file.isDirectory()) inspect(name);
-      else assert(!/astro:assets|http-cache-semantics/.test(fs.readFileSync(name,'utf8')), 'Exception requires no image/cache service imports');
-    }
+  for (const file of fs.readdirSync('src',{recursive:true,withFileTypes:true})) {
+    if (!file.isDirectory()) assert(!/astro:assets|http-cache-semantics/.test(fs.readFileSync(path.join(file.parentPath,file.name),'utf8')), 'Exception requires no image/cache service imports');
   }
-  inspect('src');
   for (const v of severe) assert(v.severity==='high' && (
     (v.name==='http-cache-semantics' && v.via.length===1 && v.via.every(a=>typeof a==='object' && a.url==='https://github.com/advisories/GHSA-ch52-4w7c-c8xp')) ||
     (v.name==='astro' && v.via.length===1 && v.via[0]==='http-cache-semantics' && report.vulnerabilities['http-cache-semantics'])

@@ -56,12 +56,11 @@
     links().forEach(link => link.addEventListener('click', event => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || (link.target && link.target.toLowerCase() !== '_self')) return;
       const pageURL = location.href.split('#')[0];
-      const preview = pageURL === 'about:srcdoc' && link.getAttribute('href') === link.hash;
-      if ((!preview && link.href.split('#')[0] !== pageURL) || link.hash !== '#' + link.dataset.section) return;
+      if (link.href.split('#')[0] !== pageURL || link.hash !== '#' + link.dataset.section) return;
       event.preventDefault();
       const menu = document.querySelector('#contact-menu');
       if (document.querySelector('.say-hi').getAttribute('aria-expanded') === 'true') menu.hidePopover();
-      try { history.replaceState(history.state, '', pageURL + link.hash); } catch { /* Opaque previews still scroll locally. */ }
+      try { history.replaceState(history.state, '', pageURL + link.hash); } catch { /* Scrolling still works when history writes are blocked. */ }
       land(link.dataset.section, true);
     }));
     new ResizeObserver(margins).observe(document.querySelector('.content,.case-study'));
