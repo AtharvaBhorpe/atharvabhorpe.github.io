@@ -26,7 +26,7 @@ const approvedAssets = {
 };
 for (const [file,hash] of Object.entries(approvedAssets)) assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,'public',file))).digest('hex'), hash, file);
 const css = fs.readFileSync(path.join(root,'src/styles/theme.css'),'utf8');
-const approvedPalette = { light:'6ae44769ffe202c7828e4559636b63a2d969154beac30b872b0cc37a4ac9a889', dark:'8dfe6db750f7b8193d42a987fc216cbfee47581a75ae7837a8f7f3dd179c2ada' };
+const approvedPalette = { light:'badddcf3ce049e80ab64a67c8fd4330066a6cf947e07ca3cd316b05681354798', dark:'8dfe6db750f7b8193d42a987fc216cbfee47581a75ae7837a8f7f3dd179c2ada' };
 const luminance = hex => hex.match(/[a-f\d]{2}/gi).map(s=>parseInt(s,16)/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
 const contrasts = [];
 for (const mode of ['light','dark']) {
@@ -35,7 +35,7 @@ for (const mode of ['light','dark']) {
   assert.equal(createHash('sha256').update(block).digest('hex'), approvedPalette[mode], 'Approved palette is unchanged');
   const tokens = Object.fromEntries([...block.matchAll(/--([\w-]+):(#\w{6})/g)].map(m=>[m[1],m[2]]));
   const pairs = [['selection-text','selection-bg',4.5],['button-text','button-bg',4.5],['link-text','surface-panel',4.5],['focus-selected','selection-bg',3]];
-  for (const surface of ['surface-page','surface-panel','surface-navigation','surface-hover','surface-input']) pairs.push(['text-primary',surface,4.5],['text-secondary',surface,4.5],['focus-ring',surface,3],['rule-control',surface,3]);
+  for (const surface of ['surface-page','surface-panel','surface-navigation','surface-hover','surface-input']) pairs.push(['text-primary',surface,4.5],['text-secondary',surface,4.5],['link-text',surface,4.5],['focus-ring',surface,3],['rule-control',surface,3]);
   for (const [foreground,background,minimum] of pairs) {
     const a=luminance(tokens[foreground]),b=luminance(tokens[background]),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
     assert(ratio>=minimum, `${mode} ${foreground}/${background}: ${ratio}`); contrasts.push({mode,foreground,background,ratio,minimum});
@@ -190,6 +190,8 @@ for (const mode of ['light','dark']) {
       await homePage.goto(origin+route+'?theme='+mode+(route==='/'?'#projects':'#overview'));
       await homePage.evaluate(()=>document.fonts.ready);
       const shortcut=homePage.locator(width===375?'.phone-dock>.home-link':'aside>.home-link');
+      const accent=mode==='light'?'rgb(0, 120, 46)':'rgb(241, 255, 102)';
+      assert(await homePage.locator('.intro-contact a,.project h3 .arrow,.links a,.prose a').evaluateAll((nodes,color)=>nodes.every(e=>getComputedStyle(e).color===color),accent),`${route} ${mode} link and arrow accents`);
       for(const phase of ['before','after']) {
         const expected=await homePage.evaluate(()=>[getComputedStyle(document.querySelector('aside')).backgroundColor,getComputedStyle(document.body).color,'none','none']);
         for(const state of ['rest','hover','pressed','keyboard']) {
@@ -201,7 +203,7 @@ for (const mode of ['light','dark']) {
             const s=getComputedStyle(e); return [s.backgroundColor,s.color,s.boxShadow,s.textDecorationLine];
           }),expected,`Plain home shortcut: ${route} ${width} ${mode} ${phase} ${state}`);
           if(state==='pressed') {await homePage.mouse.move(0,0); await homePage.mouse.up();}
-          if(state==='keyboard') assert(await shortcut.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle!=='none'));
+          if(state==='keyboard') assert(await shortcut.evaluate((e,color)=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle!=='none' && getComputedStyle(e).outlineColor===color,accent));
         }
         if(phase==='before') {
           await homePage.keyboard.press('Enter');
@@ -218,6 +220,19 @@ for (const mode of ['light','dark']) {
       return delta>=0 && delta<=9;
     }),'Initial home hash lands at the top section');
     await homePage.close();
+    const noScript=await browser.newPage({javaScriptEnabled:false});
+    for(const route of ['/',pages[1],'/writing/','/writing/install-isaac-lab-in-5-minutes-with-pixi/']) for(const width of [375,1440]) {
+      await noScript.setViewportSize({width,height:900});
+      await noScript.goto(origin+route);
+      assert(await noScript.locator('html').evaluate(e=>{
+        const s=getComputedStyle(e);
+        return !e.hasAttribute('data-resolved') && s.getPropertyValue('--link-text').trim().toUpperCase()==='#00782E' && s.getPropertyValue('--focus-ring').trim().toUpperCase()==='#00782E';
+      }),'No-script fallback retains the approved light accent');
+      const name=noScript.locator(width===375?'.phone-dock>.home-link':'aside>.home-link');
+      await name.focus();
+      assert.equal(await name.evaluate(e=>getComputedStyle(e).outlineColor),'rgb(0, 120, 46)');
+    }
+    await noScript.close();
     await page.emulateMedia({reducedMotion:'reduce'});
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
