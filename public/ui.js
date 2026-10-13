@@ -15,13 +15,13 @@ let pointerStart;
 let revealAfter = 0;
 // Move only the strip, never the article. Manual swipes keep their chosen position.
 function revealLink(link) {
-  if (contentsButton) return;
+  if (!strip || contentsButton) return;
   const tab = link.getBoundingClientRect(), rail = strip.getBoundingClientRect();
   if (tab.left < rail.left + 5) strip.scrollLeft += tab.left - rail.left - 5;
   else if (tab.right > rail.right - 5) strip.scrollLeft += tab.right - rail.right + 5;
 }
-strip.addEventListener('pointerdown', event => { pointerStart = [event.clientX, event.clientY]; });
-strip.addEventListener('pointermove', event => {
+strip?.addEventListener('pointerdown', event => { pointerStart = [event.clientX, event.clientY]; });
+strip?.addEventListener('pointermove', event => {
   if (pointerStart) {
     const dx = Math.abs(event.clientX - pointerStart[0]), dy = Math.abs(event.clientY - pointerStart[1]);
     if (dx > 8 && dx > dy) swiping = true;
@@ -31,17 +31,17 @@ for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type,
   pointerStart = null;
   if (swiping) { swiping = false; revealAfter = performance.now() + 800; }
 }, { passive:true });
-strip.addEventListener('wheel', event => {
+strip?.addEventListener('wheel', event => {
   if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) revealAfter = performance.now() + 800;
 }, { passive:true });
-strip.addEventListener('focusin', event => {
+strip?.addEventListener('focusin', event => {
   if (event.target.matches('a')) revealLink(event.target);
 });
 // A breakpoint can hide the focused link before the resize event runs.
 for (const region of [sidebar, dock]) region.addEventListener('focusout', event => {
   if (!event.relatedTarget && !region.getClientRects().length) requestAnimationFrame(() => {
     if (document.activeElement === document.body) {
-      const target = dock.getClientRects().length ? contentsButton || strip.querySelector('[aria-current]') : sidebar.querySelector('[aria-current]');
+      const target = dock.getClientRects().length ? contentsButton || strip?.querySelector('[aria-current]') || dock.querySelector('.home-link') : sidebar.querySelector('[aria-current]');
       target.focus({ preventScroll:true });
     }
   });
@@ -53,7 +53,7 @@ function updateNavigation() {
     if (link.dataset.section === current.dataset.section) link.setAttribute('aria-current', 'location');
     else link.removeAttribute('aria-current');
   }
-  const dockCurrent = strip.querySelector('[aria-current]');
+  const dockCurrent = strip?.querySelector('[aria-current]') || dock.querySelector('.home-link');
   if (contentsButton) contentsButton.querySelector('.contents-current').textContent = current.textContent;
   if (compact && (activeSection !== current.dataset.section || !wasCompact) && !swiping && performance.now() >= revealAfter) revealLink(dockCurrent);
   if (!compact) {
