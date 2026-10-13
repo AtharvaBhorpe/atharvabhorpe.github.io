@@ -10,7 +10,7 @@
 /* Reserve symmetric scroll gutters on the actual scroll container of each layout. */
 html:has(.detail-page),.home-page .page-scroll{scrollbar-gutter:stable both-edges}
 .detail-page .cover{display:block;padding:0;border:0;aspect-ratio:auto;background:none;text-align:left}
-.detail-page .cover img,.detail-page .cover video,.detail-page .prose img{display:block;width:100%;height:auto;border-radius:var(--space-xs)}
+.detail-page .cover img,.detail-page .cover video,.detail-page .prose img,.detail-page .prose video{display:block;width:100%;height:auto;border-radius:var(--space-xs)}
 .detail-page .cover video{background:var(--surface-placeholder)}
 .detail-page .cover video:focus-visible{outline:3px solid var(--focus-ring);outline-offset:4px}
 .detail-page .cover .links{font-family:var(--font-body)}
