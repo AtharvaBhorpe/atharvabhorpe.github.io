@@ -143,7 +143,7 @@ for (const mode of ['light','dark']) {
       assert(box.width>=44 && box.height>=44,'Home shortcut has a 44px target');
       await homePage.evaluate(()=>{
         const rail=document.querySelector('aside'); rail.scrollTop=rail.scrollHeight;
-        const strip=document.querySelector('.phone-dock nav'); strip.scrollLeft=strip.scrollWidth;
+        const strip=document.querySelector('.phone-dock nav'); if(strip) strip.scrollLeft=strip.scrollWidth;
       });
       assert(await shortcut.evaluate(e=>{
         const r=e.getBoundingClientRect();
@@ -162,6 +162,27 @@ for (const mode of ['light','dark']) {
         await shortcut.focus();
         await homePage.keyboard.press('Tab');
         assert(await homePage.locator('.say-hi').evaluate(e=>e===document.activeElement && e.matches(':focus-visible')),'Keyboard order follows name then contact');
+        if(route==='/writing/') {
+          assert.equal(await homePage.locator('.phone-dock nav,.phone-dock [data-section],.contents-button,.section-scroll-hint').count(),0,'Writing index has no redundant section controls');
+          assert(await homePage.locator('.phone-dock').evaluate(e=>{
+            const r=e.getBoundingClientRect(),name=e.querySelector('.home-link').getBoundingClientRect(),contact=e.querySelector('.say-hi').getBoundingClientRect();
+            return r.height===46 && name.top===contact.top && name.height>=44 && contact.height>=44 && contact.width>=44;
+          }),'Writing toolbar is one 46px row with 44px targets');
+          assert.equal(await homePage.locator('.case-study').evaluate(e=>getComputedStyle(e).paddingBottom),'82px','Writing content clearance uses the smaller toolbar');
+          await homePage.keyboard.press('Enter');
+          await homePage.waitForFunction(()=>document.querySelector('#contact-menu').contains(document.activeElement));
+          const otherMode=mode==='light'?'dark':'light';
+          await homePage.locator('#contact-menu select').selectOption(otherMode);
+          assert.equal(await homePage.locator('html').getAttribute('data-resolved'),otherMode,'Writing theme control works without section navigation');
+          await homePage.locator('#contact-menu select').selectOption(mode);
+          await homePage.keyboard.press('Escape');
+          assert(await homePage.locator('.say-hi').evaluate(e=>e===document.activeElement),'Contact Escape restores keyboard focus');
+          await homePage.setViewportSize({width:1440,height:900});
+          await homePage.waitForFunction(()=>document.querySelector('aside nav [aria-current]')===document.activeElement);
+          assert.equal(await homePage.locator('aside nav a').count(),1,'Desktop Overview remains unchanged');
+          await homePage.setViewportSize({width,height:900});
+          await homePage.waitForFunction(()=>document.querySelector('.phone-dock>.home-link')===document.activeElement);
+        } else {
         await homePage.keyboard.press('Tab');
         assert(await homePage.locator('.phone-dock .contents-button,.phone-dock nav a').first().evaluate(e=>e===document.activeElement && e.matches(':focus-visible')),'Keyboard order continues to the section row');
         assert(await homePage.locator('.phone-dock').evaluate(e=>{
@@ -174,15 +195,16 @@ for (const mode of ['light','dark']) {
         assert(await homePage.locator('.phone-dock nav a').evaluateAll(nodes=>nodes.every(e=>{
           const r=e.getBoundingClientRect();return r.height>=44 && r.width>=44;
         })),'Every compact section retains a 44px target');
-        assert(await homePage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Compact toolbar does not widen the page');
         const section=homePage.locator('.phone-dock nav a').last();
         await section.tap();
         assert.equal(await homePage.evaluate(()=>document.activeElement.id),await section.getAttribute('data-section'),'Touch navigation lands and focuses the heading');
+        }
+        assert(await homePage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Compact toolbar does not widen the page');
         await homePage.locator('.say-hi').tap();
         assert(await homePage.locator('#contact-menu').evaluate(e=>{
           const r=e.getBoundingClientRect(),dock=document.querySelector('.phone-dock').getBoundingClientRect();
-          return r.top>=0 && r.bottom<dock.top;
-        }),'Contact popover clears the full dock');
+          return r.top>=0 && dock.top-r.bottom===8;
+        }),'Contact popover sits 8px above the actual dock');
         await homePage.keyboard.press('Escape');
         await homePage.evaluate(()=>{
           const region=document.querySelector('.page-scroll');

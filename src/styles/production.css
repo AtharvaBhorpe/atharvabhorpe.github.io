@@ -33,6 +33,7 @@ body .phone-dock a[aria-current]:active,body .rail a[aria-current]:active,body .
 @media(hover:hover){body .project-link:hover,body .phone-dock a:not([aria-current]):hover,body .contact-menu :is(a,button):not(:disabled):hover,body .rail :is(a,button):not(:disabled):not([aria-current]):hover,body .sections a:not([aria-current]):hover,body .contact-resources :is(a,button):not(:disabled):hover,body .detail-sidebar>.back:hover{background:var(--surface-hover)}body .phone-dock a[aria-current]:hover{background:var(--selection-bg);color:var(--selection-text)}}
 /* Keep the home shortcut visible while the remaining navigation scrolls. */
 :root{--dock-stack-height:91px}
+body:has(.phone-dock.single-row){--dock-stack-height:46px}
 body{--control-clearance:calc(var(--dock-stack-height) + 3 * var(--space-sm))}
 body :is(.rail,.detail-sidebar){scroll-padding-top:96px}
 body :is(.rail,.detail-sidebar)>.home-link{position:sticky;top:0;z-index:1;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:44px;min-width:44px;padding:8px 6px;border-radius:var(--space-xs);background:var(--surface-navigation);color:var(--text-primary);font:650 15px/1.5 var(--font-body);letter-spacing:-.2px;text-decoration:none}
