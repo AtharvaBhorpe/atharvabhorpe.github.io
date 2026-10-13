@@ -448,25 +448,37 @@ for (const mode of ['light','dark']) {
     }
     assert(pressedColors.every(color=>color===pressedColors[0] && color!=='rgba(0, 0, 0, 0)'), 'Text links share visible pointer-down feedback');
     await page.emulateMedia({reducedMotion:'reduce'});
-    for (const width of [320,375,1440]) {
+    for (const route of ['/projects/tiny-recursive-model/','/writing/teaching-a-tiny-recursive-model-to-plan-paths/']) for (const mode of ['light','dark']) for (const width of [320,375,1440]) {
       await page.setViewportSize({width,height:width===1440?900:600});
-      await page.goto(origin+'/projects/tiny-recursive-model/');
+      await page.goto(origin+route+'?theme='+mode);
       const video=page.locator('video');
       await video.evaluate(v=>v.scrollIntoView({block:'start'}));
       await page.waitForFunction(()=>document.querySelector('video').readyState>=1);
       const initial=await video.evaluate(v=>({paused:v.paused,autoplay:v.autoplay,loop:v.loop,controls:v.controls,inline:v.playsInline,preload:v.preload,width:v.videoWidth,height:v.videoHeight,duration:v.duration,described:!!document.getElementById(v.getAttribute('aria-describedby'))?.textContent}));
-      assert.deepEqual({...initial,duration:undefined},{paused:true,autoplay:false,loop:false,controls:true,inline:true,preload:'metadata',width:1920,height:1200,duration:undefined,described:true});
+      assert.deepEqual({...initial,duration:undefined},{paused:true,autoplay:false,loop:false,controls:true,inline:true,preload:'metadata',width:1920,height:1200,duration:undefined,described:route.startsWith('/projects/')});
       assert(initial.duration>10.8&&initial.duration<11.1);
-      assert(await video.evaluate(v=>v.getBoundingClientRect().right<=innerWidth));
-      await video.focus(); await page.keyboard.press('Space');
+      assert.equal(await video.getAttribute('poster'),'/images/trm-demo-poster.jpg');
+      assert(await video.getAttribute('aria-label'),'Video has an accessible label');
+      assert(await video.evaluate(v=>{
+        const box=v.getBoundingClientRect(),container=v.closest('.prose,.panel'),bounds=container.getBoundingClientRect(),style=getComputedStyle(container);
+        const left=bounds.left+parseFloat(style.borderLeftWidth)+parseFloat(style.paddingLeft);
+        const contentWidth=container.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
+        return box.left>=left-1 && box.right<=left+contentWidth+1 && Math.abs(box.width-contentWidth)<1
+          && Math.abs(box.width/box.height-v.videoWidth/v.videoHeight)<.002
+          && container.scrollWidth<=container.clientWidth+1 && document.documentElement.scrollWidth<=innerWidth
+          && getComputedStyle(v).objectFit!=='cover';
+      }),`Video fits text width without overflow or crop: ${route} ${width} ${mode}`);
+      await video.focus();
+      assert(await video.evaluate(v=>v.matches(':focus-visible') && getComputedStyle(v).outlineStyle!=='none'),'Native video retains visible keyboard focus');
+      await page.keyboard.press('Space');
       await page.waitForFunction(()=>{const v=document.querySelector('video');return !v.paused&&v.currentTime>.1&&v.getVideoPlaybackQuality().totalVideoFrames>1;});
       await page.keyboard.press('Space'); assert(await video.evaluate(v=>v.paused));
       assert.equal(await page.evaluate(()=>document.querySelector('video').error),null);
       await video.evaluate(v=>{v.currentTime=6;});
       await page.waitForFunction(()=>!document.querySelector('video').seeking);
-      await page.screenshot({path:path.join(out,`trm-video-${width}.png`)});
+      await page.screenshot({path:path.join(out,`trm-video-${route.startsWith('/projects/')?'project':'article'}-${mode}-${width}.png`)});
     }
-    console.log('PASS real TRM video: metadata, dimensions, decoded playback, native Space play/pause, seeking and reduced-motion static default');
+    console.log('PASS project/article TRM videos: responsive bounds, encoded aspect ratio, light/dark, metadata, native controls/focus/Space, seeking and reduced-motion static default');
     await page.emulateMedia({reducedMotion:'no-preference'});
     await page.setViewportSize({width:375,height:900});
     await page.goto(origin);
