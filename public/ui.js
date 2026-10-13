@@ -3,6 +3,7 @@ const sidebar = document.querySelector('.detail-sidebar,.rail');
 const scrollRegion = document.querySelector('.page-scroll');
 const dock = document.querySelector('.phone-dock');
 const strip = dock.querySelector('nav');
+const contentsButton = dock.querySelector('.contents-button');
 const menu = document.querySelector('#contact-menu');
 const menuButton = document.querySelector('.say-hi');
 const sectionLinks = [...sidebar.querySelectorAll('[data-section]')];
@@ -14,6 +15,7 @@ let pointerStart;
 let revealAfter = 0;
 // Move only the strip, never the article. Manual swipes keep their chosen position.
 function revealLink(link) {
+  if (contentsButton) return;
   const tab = link.getBoundingClientRect(), rail = strip.getBoundingClientRect();
   if (tab.left < rail.left + 5) strip.scrollLeft += tab.left - rail.left - 5;
   else if (tab.right > rail.right - 5) strip.scrollLeft += tab.right - rail.right + 5;
@@ -39,8 +41,8 @@ strip.addEventListener('focusin', event => {
 for (const region of [sidebar, dock]) region.addEventListener('focusout', event => {
   if (!event.relatedTarget && !region.getClientRects().length) requestAnimationFrame(() => {
     if (document.activeElement === document.body) {
-      const visibleNav = dock.getClientRects().length ? strip : sidebar;
-      visibleNav.querySelector('[aria-current]').focus({ preventScroll:true });
+      const target = dock.getClientRects().length ? contentsButton || strip.querySelector('[aria-current]') : sidebar.querySelector('[aria-current]');
+      target.focus({ preventScroll:true });
     }
   });
 });
@@ -52,12 +54,14 @@ function updateNavigation() {
     else link.removeAttribute('aria-current');
   }
   const dockCurrent = strip.querySelector('[aria-current]');
+  if (contentsButton) contentsButton.querySelector('.contents-current').textContent = current.textContent;
   if (compact && (activeSection !== current.dataset.section || !wasCompact) && !swiping && performance.now() >= revealAfter) revealLink(dockCurrent);
   if (!compact) {
     const hadFocus = menu.contains(document.activeElement) || dock.contains(document.activeElement);
     if (menu.matches(':popover-open')) menu.hidePopover();
+    if (contentsButton && strip.matches(':popover-open')) strip.hidePopover();
     if (hadFocus) current.focus({ preventScroll:true });
-  } else if (sidebar.contains(document.activeElement)) dockCurrent.focus({ preventScroll:true });
+  } else if (sidebar.contains(document.activeElement)) (contentsButton || dockCurrent).focus({ preventScroll:true });
   activeSection = current.dataset.section;
   wasCompact = compact;
 }
@@ -69,6 +73,18 @@ window.addEventListener('resize', updateNavigation);
 window.visualViewport?.addEventListener('resize', updateNavigation);
 new ResizeObserver(updateNavigation).observe(document.querySelector('.detail-shell,.stage'));
 updateNavigation();
+if (contentsButton) {
+  strip.addEventListener('beforetoggle', event => {
+    contentsButton.setAttribute('aria-expanded', String(event.newState === 'open'));
+  });
+  strip.addEventListener('toggle', event => {
+    if (event.newState === 'open') {
+      const current = strip.querySelector('[aria-current]');
+      current.focus({ preventScroll:true });
+      current.scrollIntoView({ block:'nearest', behavior:'instant' });
+    }
+  });
+}
 menu.addEventListener('beforetoggle', event => {
   menuButton.setAttribute('aria-expanded', String(event.newState === 'open'));
 });

@@ -11,13 +11,13 @@ interface Props {
   headings: { depth: number; slug: string; text: string }[];
 }
 const { title, description, headings, backHref = '/writing/', backLabel = 'Writing' } = Astro.props;
-const sections = [{ id:'overview', label:'Overview' }, ...headings.filter(h=>h.depth===2 || h.depth===3).map(h=>({ id:h.slug, label:h.text }))];
+const sections = [{ id:'overview', label:'Overview' }, ...headings.filter(h=>h.depth===2 || h.depth===3).map(h=>({ id:h.slug, label:h.text, depth:h.depth }))];
 ---
 <Base title={title} description={description}>
   <div class="detail-shell article-shell">
     <a class="back compact-back" href={backHref}>← Back to {backLabel}</a>
     <div class="detail-layout">
-      <Navigation detail sections={sections} backHref={backHref} backLabel={backLabel} />
+      <Navigation detail contents sections={sections} backHref={backHref} backLabel={backLabel} />
       <main class="case-study">
         <header class="panel"><p class="eyebrow">Atharva Bhorpe · Writing</p><h1 id="overview" tabindex="-1">{title}</h1><p class="summary">{description}</p></header>
         <slot />

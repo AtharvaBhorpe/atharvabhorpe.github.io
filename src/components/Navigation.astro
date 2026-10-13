@@ -5,9 +5,10 @@ interface Props {
   detail?: boolean;
   backHref?: string;
   backLabel?: string;
-  sections: { id: string; label: string; icon?: string }[];
+  contents?: boolean;
+  sections: { id: string; label: string; icon?: string; depth?: number }[];
 }
-const { detail = false, sections, backHref = '/#projects', backLabel = 'Projects' } = Astro.props;
+const { detail = false, contents = false, sections, backHref = '/#projects', backLabel = 'Projects' } = Astro.props;
 ---
 <aside class={detail ? 'detail-sidebar' : 'rail'} aria-label={detail ? 'Project navigation' : 'Portfolio sidebar'}>
   <a class="name home-link" href={detail ? '/#home' : '#home'} data-section={detail ? undefined : 'home'}>Atharva <span>Bhorpe</span></a>
@@ -21,9 +22,10 @@ const { detail = false, sections, backHref = '/#projects', backLabel = 'Projects
 <div class="phone-dock">
   <a class="home-link" href={detail ? '/#home' : '#home'} data-section={detail ? undefined : 'home'}>Atharva Bhorpe</a>
   <button class="say-hi" type="button" popovertarget="contact-menu" aria-controls="contact-menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 13 6 7a1.5 1.5 0 0 1 3-1l2 5-2-7a1.5 1.5 0 0 1 3-1l2 7-1-6a1.5 1.5 0 0 1 3 0l1 6V7a1.5 1.5 0 0 1 3 0v8c0 4-3 6-6 6-3 0-5-2-7-4l-3-4a1.5 1.5 0 0 1 2-2Z" /></svg>Say Hi</button>
-  {detail && <p class="section-scroll-hint" hidden>Sections · swipe ↔</p>}
-  <nav aria-label={detail ? 'Project sections' : 'Phone navigation'}>
-    {sections.map(section => <a href={`#${section.id}`} data-section={section.id}>
+  {detail && !contents && <p class="section-scroll-hint" hidden>Sections · swipe ↔</p>}
+  {contents && <button class="contents-button" type="button" popovertarget="article-contents" aria-controls="article-contents" aria-expanded="false">Contents <span class="contents-current">Overview</span><span aria-hidden="true">▾</span></button>}
+  <nav id={contents ? 'article-contents' : undefined} class={contents ? 'contents-menu' : undefined} popover={contents ? 'auto' : undefined} aria-label={contents ? 'Article contents' : detail ? 'Project sections' : 'Phone navigation'}>
+    {sections.map(section => <a href={`#${section.id}`} data-section={section.id} class={contents && section.depth === 3 ? 'subsection' : undefined}>
       {section.icon && <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={section.icon} /></svg>}
       {section.label}
     </a>)}

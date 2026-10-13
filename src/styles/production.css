@@ -47,6 +47,15 @@ body .phone-dock>.say-hi{flex:0 0 auto;flex-direction:row;gap:4px;min-height:44p
 body .phone-dock nav{flex:0 0 100%;padding:0;border-width:1px 0 0;border-radius:0 0 var(--radius-panel) var(--radius-panel);background:transparent;backdrop-filter:none;box-shadow:none}
 body .phone-dock nav a{gap:2px}
 body .phone-dock :is(a,button):focus-visible{outline-offset:-3px}
+body .phone-dock .contents-button{display:flex;align-items:center;gap:8px;flex:0 0 100%;min-width:0;min-height:45px;padding:8px 12px;border:0;border-top:1px solid var(--rule-control);border-radius:0 0 var(--radius-panel) var(--radius-panel);background:transparent;color:var(--text-primary);font:13px/1.5 var(--font-body);text-align:left;cursor:pointer}
+.contents-current{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
+.contents-button:focus-visible{outline:3px solid var(--focus-ring)}
+.contents-button:active{background:var(--surface-hover)}
+body .phone-dock .contents-menu{position:fixed;inset:auto var(--dock-right) calc(var(--dock-bottom) + var(--dock-stack-height) + var(--space-xs)) var(--dock-left);width:min(calc(100% - var(--dock-left) - var(--dock-right)),var(--dock-width));max-height:calc(100dvh - var(--dock-bottom) - var(--dock-stack-height) - 2 * var(--space-sm) - env(safe-area-inset-top,0px));margin:0 auto;padding:4px;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain;scroll-padding:4px;border:1px solid var(--rule-control);border-radius:var(--radius-panel);background:var(--surface-panel);color:var(--text-primary);box-shadow:var(--shadow-floating)}
+body .phone-dock .contents-menu:not(:popover-open){display:none}
+body .phone-dock .contents-menu:popover-open{display:block}
+body .phone-dock .contents-menu a{justify-content:flex-start;white-space:normal;overflow-wrap:anywhere;text-align:left;border-radius:var(--space-xs);scroll-margin-block:4px}
+body .phone-dock .contents-menu a.subsection{padding-left:24px}
 body .contact-menu{bottom:calc(var(--space-sm) + var(--dock-stack-height) + var(--space-xs) + env(safe-area-inset-bottom,0px));max-height:calc(100dvh - var(--dock-stack-height) - 3 * var(--space-sm) - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px))}
 @container detail (max-width:855px){.detail-page .case-study{padding-bottom:calc(var(--dock-bottom) + var(--dock-stack-height) + 2 * var(--space-sm))}.detail-page .case-study :is([tabindex],a){scroll-margin-bottom:calc(var(--dock-bottom) + var(--dock-stack-height) + var(--space-sm))}}
 /* Navigation stays visible without competing with the project content. */
