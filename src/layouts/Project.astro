@@ -51,3 +51,9 @@ const sections = [
     </div>
   </div>
 </Base>
+<style>
+  @media(max-width:500px){
+    .detail-shell :global(.prose > :is(p,ul,ol)){font-size:16px;line-height:1.6}
+    .detail-shell :global(.prose code){font-size:var(--text-body)}
+  }
+</style>

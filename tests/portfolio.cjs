@@ -383,6 +383,21 @@ for (const mode of ['light','dark']) {
         assert.deepEqual(hoverStyles[1],hoverStyles[0], 'Writing and Projects share hover fill, radius and horizontal padding');
       }
     }
+    for(const route of pages.filter(route=>route.startsWith('/projects/'))) for(const width of [320,375,414,500,501,768,904,1440]) for(const mode of ['light','dark']) {
+      await page.setViewportSize({width,height:900});
+      await page.goto(origin+route+'?theme='+mode); await page.evaluate(()=>document.fonts.ready);
+      const readingSize=width<=500?'16px':'14px',readingLine=width<=500?'25.6px':'22.4px';
+      const roles={'.prose p':[readingSize,readingLine],'.prose li':[readingSize,readingLine],'.prose code':['14px','22.4px'],'.eyebrow':['12px','18px'],'.summary':['15px','24px'],'.facts':['14px','22.4px'],'.source,figcaption':['13px','20.8px'],'h1':[width<=500?'28px':'34px',width<=500?'33.6px':'40.8px'],'h2':['18px','28.8px'],'h3':['14px','22.4px'],'.phone-dock nav a':['13px','19.5px']};
+      assert(await page.locator('.prose p').count()>0);
+      for(const [selector,expected] of Object.entries(roles)) {
+        for(const actual of await page.locator(selector).evaluateAll(nodes=>nodes.map(e=>{const s=getComputedStyle(e);return [s.fontSize,s.lineHeight];}))) assert.deepEqual(actual,expected,`${route} ${width}px ${mode}: ${selector}`);
+      }
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Larger project reading text fits the viewport');
+      if([320,375,414,768].includes(width)) {
+        await page.locator('.prose').first().evaluate(e=>scrollTo(0,scrollY+e.getBoundingClientRect().top-8));
+        await page.screenshot({path:path.join(out,`project-reading-${route.split('/')[2]}-${width}-${mode}.png`)});
+      }
+    }
     for (const route of pages) {
       assert.equal((await fetch(origin+route)).status, 200);
       for (const [width,height] of [[320,900],[375,900],[414,900],[599,900],[768,900],[903,900],[904,900],[1440,900],[852,393],[320,480],[375,300],[1440,393]]) {
@@ -656,6 +671,7 @@ for (const mode of ['light','dark']) {
         for(const width of [375,904,1280]) for(const mode of ['light','dark']) {
           await page.setViewportSize({width,height:900}); await page.goto(origin+route+'?theme='+mode);
           assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),route+' article fits '+width);
+          assert(await page.locator('.prose p,.prose li').evaluateAll(nodes=>nodes.every(e=>{const s=getComputedStyle(e);return s.fontSize==='16px' && s.lineHeight==='28px';})),route+' article reading typography stays at 16px / 1.75');
           assert(await page.locator('.prose pre').evaluateAll(blocks=>blocks.every(e=>{
             const s=getComputedStyle(e);
             return parseFloat(s.borderBottomLeftRadius)===12 && parseFloat(s.paddingLeft)===12 && parseFloat(s.lineHeight)<=21 && s.overflowX==='auto' && e.tabIndex===0;
