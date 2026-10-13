@@ -104,6 +104,7 @@ for (const mode of ['light','dark']) {
         };
       });
       const scope=await motionPage.locator('.phone-dock').isVisible()?'.phone-dock':'aside';
+      if(await motionPage.locator('.contents-button').isVisible()) await motionPage.locator('.contents-button').click();
       await motionPage.locator(`${scope} [data-section="${id}"]`).focus();
       await motionPage.keyboard.press('Enter');
       assert.equal(await motionPage.evaluate(()=>scrollRequest.behavior),reducedMotion==='reduce'?'instant':'smooth');
@@ -162,13 +163,14 @@ for (const mode of ['light','dark']) {
         await homePage.keyboard.press('Tab');
         assert(await homePage.locator('.say-hi').evaluate(e=>e===document.activeElement && e.matches(':focus-visible')),'Keyboard order follows name then contact');
         await homePage.keyboard.press('Tab');
-        assert(await homePage.locator('.phone-dock nav a').first().evaluate(e=>e===document.activeElement && e.matches(':focus-visible')),'Keyboard order continues to the section row');
+        assert(await homePage.locator('.phone-dock .contents-button,.phone-dock nav a').first().evaluate(e=>e===document.activeElement && e.matches(':focus-visible')),'Keyboard order continues to the section row');
         assert(await homePage.locator('.phone-dock').evaluate(e=>{
-          const dock=e.getBoundingClientRect(),nav=e.querySelector('nav').getBoundingClientRect();
+          const dock=e.getBoundingClientRect(),nav=e.querySelector('.contents-button,nav').getBoundingClientRect();
           const name=e.querySelector('.home-link').getBoundingClientRect(),contact=e.querySelector('.say-hi').getBoundingClientRect();
           return dock.height===91 && nav.width===dock.width-2 && name.top===contact.top && nav.top>=name.bottom
             && contact.height>=44 && contact.width>=44 && innerHeight-dock.bottom>=12;
         }),'Unified dock is 91px tall, retains 44px targets and gives sections the full row');
+        if(await homePage.locator('.contents-button').isVisible()) await homePage.keyboard.press('Enter');
         assert(await homePage.locator('.phone-dock nav a').evaluateAll(nodes=>nodes.every(e=>{
           const r=e.getBoundingClientRect();return r.height>=44 && r.width>=44;
         })),'Every compact section retains a 44px target');
@@ -643,6 +645,88 @@ for (const mode of ['light','dark']) {
       assert(await page.locator('img').evaluateAll(images=>images.every(i=>i.hasAttribute('alt'))),route+' images have alt text');
       await page.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth>0),null,{timeout:15000});
     }
+    const contentsPage=await browser.newPage({hasTouch:true});
+    contentsPage.on('pageerror',e=>errors.push(e.message));
+    await contentsPage.emulateMedia({reducedMotion:'reduce'});
+    const contentsCDP=await contentsPage.context().newCDPSession(contentsPage);
+    const contentsMeasurements=[];
+    for(const route of writingRoutes) for(const width of [320,375,414,768]) for(const mode of ['light','dark']) {
+      await contentsPage.setViewportSize({width,height:900});
+      await contentsPage.goto(origin+route+'?theme='+mode);
+      await contentsPage.evaluate(()=>document.fonts.ready);
+      const trigger=contentsPage.locator('.contents-button'),list=contentsPage.locator('#article-contents');
+      const destinations=await contentsPage.locator('h1,.prose h2,.prose h3').evaluateAll(nodes=>nodes.map(e=>({id:e.id,label:e.id==='overview'?'Overview':e.textContent})));
+      assert.deepEqual(await list.locator('a').evaluateAll(nodes=>nodes.map(e=>({id:e.dataset.section,label:e.textContent.trim()}))),destinations,'Contents preserves every heading destination and full label');
+      assert.equal(await list.locator('.subsection').count(),await contentsPage.locator('.prose h3').count(),'Contents retains all h3 destinations');
+      assert(!(await list.isVisible()));
+      await trigger.focus(); await contentsPage.keyboard.press('Enter');
+      await contentsPage.waitForFunction(()=>document.querySelector('#article-contents [aria-current]')===document.activeElement);
+      assert.equal(await trigger.getAttribute('aria-expanded'),'true');
+      assert.equal(await contentsPage.evaluate(()=>scrollY),0,'Opening Contents does not move the article');
+      assert(await list.evaluate(e=>{
+        const r=e.getBoundingClientRect(),dock=document.querySelector('.phone-dock').getBoundingClientRect();
+        return r.top>=0 && r.bottom<dock.top && e.scrollWidth===e.clientWidth;
+      }),'Contents fits above the dock without horizontal scrolling');
+      contentsMeasurements.push(await list.evaluate((e,context)=>{
+        const r=e.getBoundingClientRect();return {...context,width:r.width,height:r.height,total:e.children.length,visible:[...e.children].filter(a=>{const x=a.getBoundingClientRect();return x.top>=r.top && x.bottom<=r.bottom;}).length};
+      },{route,viewport:width,mode}));
+      if(/microros|install-isaac-lab|so-arm-import/.test(route)) await contentsPage.screenshot({path:path.join(out,`contents-${route.split('/')[2]}-${width}-${mode}.png`)});
+      for(const link of await list.locator('a').all()) {
+        await link.focus();
+        assert(await link.evaluate(e=>{
+          const r=e.getBoundingClientRect(),menu=e.parentElement.getBoundingClientRect();
+          return r.width>=44 && r.height>=44 && r.top>=menu.top && r.bottom<=menu.bottom
+            && e.matches(':focus-visible') && getComputedStyle(e).outlineStyle!=='none'
+            && e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));
+        }),'Every focused Contents destination is visible and has a 44px target');
+        if(width===375) {
+          const id=await link.getAttribute('data-section');
+          await contentsPage.keyboard.press('Enter');
+          assert(!(await list.isVisible()),'Selecting a heading closes Contents');
+          assert.equal(await contentsPage.evaluate(()=>document.activeElement.id),id);
+          assert.equal(decodeURIComponent(new URL(contentsPage.url()).hash),'#'+id);
+          assert.equal(await trigger.locator('.contents-current').textContent(),await contentsPage.locator('aside nav [aria-current]').textContent(),'Closed Contents shows the active section');
+          await trigger.focus(); await contentsPage.keyboard.press('Enter');
+          await contentsPage.waitForFunction(()=>document.querySelector('#article-contents [aria-current]')===document.activeElement);
+        }
+      }
+      await list.locator('a').last().tap();
+      assert(!(await list.isVisible()) && await contentsPage.evaluate(()=>document.activeElement.id)===destinations.at(-1).id,'Touch selection closes Contents and focuses its heading');
+      await contentsPage.evaluate(()=>scrollTo(0,document.body.scrollHeight));
+      assert(await contentsPage.evaluate(()=>document.querySelector('.case-study').lastElementChild.getBoundingClientRect().bottom<=document.querySelector('.phone-dock').getBoundingClientRect().top),'Final article content clears the closed toolbar');
+      await trigger.focus(); await contentsPage.keyboard.press('Enter');
+      await contentsPage.waitForFunction(()=>document.querySelector('#article-contents [aria-current]')===document.activeElement);
+      await contentsPage.locator('.say-hi').tap();
+      assert(!(await list.isVisible()) && await contentsPage.locator('#contact-menu').isVisible(),'Contact dismisses Contents');
+      await trigger.tap();
+      assert(await list.isVisible() && !(await contentsPage.locator('#contact-menu').isVisible()),'Contents dismisses Contact');
+      await contentsPage.keyboard.press('Escape');
+      assert(!(await list.isVisible()) && await trigger.evaluate(e=>e===document.activeElement),'Escape restores Contents trigger focus');
+      await trigger.tap(); await contentsPage.mouse.click(2,2);
+      assert(!(await list.isVisible()) && await trigger.getAttribute('aria-expanded')==='false','Outside click dismisses Contents');
+      await contentsCDP.send('Emulation.setSafeAreaInsetsOverride',{insets:{bottom:34}});
+      await trigger.tap();
+      assert(await list.evaluate(e=>e.getBoundingClientRect().top>=0 && e.getBoundingClientRect().bottom<document.querySelector('.phone-dock').getBoundingClientRect().top),'Contents clears the safe area and toolbar');
+      await contentsPage.setViewportSize({width:1440,height:900});
+      await contentsPage.waitForFunction(()=>document.querySelector('aside nav [aria-current]')===document.activeElement);
+      assert(!(await list.isVisible()),'Desktop resize closes Contents and transfers focus');
+      await contentsPage.setViewportSize({width,height:900});
+      await contentsPage.waitForFunction(()=>document.querySelector('.contents-button')===document.activeElement);
+      await contentsCDP.send('Emulation.setSafeAreaInsetsOverride',{insets:{}});
+    }
+    fs.writeFileSync(path.join(out,'contents-measurements.json'),JSON.stringify(contentsMeasurements,null,2));
+    const unicodeRoute='/writing/install-isaac-lab-in-5-minutes-with-pixi/';
+    await contentsPage.goto(origin+unicodeRoute);
+    const unicodeId=await contentsPage.locator('.prose h3').first().getAttribute('id');
+    await contentsPage.goto(origin+unicodeRoute+'#'+encodeURIComponent(unicodeId));
+    await contentsPage.evaluate(()=>document.fonts.ready);
+    assert(Math.abs(await contentsPage.evaluate(id=>document.getElementById(id).getBoundingClientRect().top,unicodeId)-8)<1,'Encoded Unicode fragment lands on its heading after load');
+    await contentsPage.evaluate(()=>{location.hash='overview';});
+    await contentsPage.waitForFunction(()=>document.querySelector('.contents-current').textContent==='Overview');
+    await contentsPage.evaluate(id=>{location.hash=encodeURIComponent(id);},unicodeId);
+    await contentsPage.waitForFunction(id=>Math.abs(document.getElementById(id).getBoundingClientRect().top-8)<1,unicodeId);
+    await contentsPage.evaluate(()=>{location.hash='%';});
+    await contentsPage.close();
     const generated=fs.readdirSync(path.join(root,'dist'),{recursive:true,withFileTypes:true});
     for (const file of generated) if(file.isFile()&&/\.(html|js|css|json|txt)$/.test(file.name)) {
       const text=fs.readFileSync(path.join(file.parentPath,file.name),'utf8');
