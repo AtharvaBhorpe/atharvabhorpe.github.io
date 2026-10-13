@@ -32,7 +32,7 @@ body .project-link:active,body .project-link:focus-visible,body .phone-dock a:ac
 body .phone-dock a[aria-current]:active,body .rail a[aria-current]:active,body .sections a[aria-current]:active{background:var(--selection-bg);color:var(--selection-text)}
 @media(hover:hover){body .project-link:hover,body .phone-dock a:not([aria-current]):hover,body .contact-menu :is(a,button):not(:disabled):hover,body .rail :is(a,button):not(:disabled):not([aria-current]):hover,body .sections a:not([aria-current]):hover,body .contact-resources :is(a,button):not(:disabled):hover,body .detail-sidebar>.back:hover{background:var(--surface-hover)}body .phone-dock a[aria-current]:hover{background:var(--selection-bg);color:var(--selection-text)}}
 /* Keep the home shortcut visible while the remaining navigation scrolls. */
-:root{--dock-stack-height:calc(var(--dock-height) + 52px)}
+:root{--dock-stack-height:91px}
 body{--control-clearance:calc(var(--dock-stack-height) + 3 * var(--space-sm))}
 body :is(.rail,.detail-sidebar){scroll-padding-top:96px}
 body :is(.rail,.detail-sidebar)>.home-link{position:sticky;top:0;z-index:1;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:44px;min-width:44px;padding:8px 6px;border-radius:var(--space-xs);background:var(--surface-navigation);color:var(--text-primary);font:650 15px/1.5 var(--font-body);letter-spacing:-.2px;text-decoration:none}
@@ -40,8 +40,13 @@ aside>.home-link::before{content:"";position:absolute;inset:-24px -16px 0;z-inde
 /* The name is a home shortcut, not a selected section. */
 .home-link{--selection-bg:var(--surface-navigation);--surface-hover:var(--surface-navigation);--shadow-floating:none}
 .home-link:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
-.phone-dock{flex-wrap:wrap}
-.phone-dock>.home-link{flex:0 0 100%;min-height:44px;padding:8px 12px;border:1px solid var(--rule-control);background:var(--surface-navigation);font:650 14px/1.5 var(--font-body);box-shadow:var(--shadow-floating)}
+/* One surface; full-width sections keep long article links usable. */
+body .phone-dock{flex-wrap:wrap;gap:0;align-items:stretch;border:1px solid var(--rule-control);border-radius:var(--radius-panel);background:var(--surface-navigation);box-shadow:var(--shadow-floating)}
+body .phone-dock>.home-link{flex:1;flex-direction:row;align-items:center;justify-content:flex-start;min-height:44px;padding:8px 12px;background:var(--surface-navigation);font:650 14px/1.5 var(--font-body);box-shadow:none}
+body .phone-dock>.say-hi{flex:0 0 auto;flex-direction:row;gap:4px;min-height:44px;padding:4px 12px;border:0;background:transparent;color:var(--text-primary);box-shadow:none}
+body .phone-dock nav{flex:0 0 100%;padding:0;border-width:1px 0 0;border-radius:0 0 var(--radius-panel) var(--radius-panel);background:transparent;backdrop-filter:none;box-shadow:none}
+body .phone-dock nav a{gap:2px}
+body .phone-dock :is(a,button):focus-visible{outline-offset:-3px}
 body .contact-menu{bottom:calc(var(--space-sm) + var(--dock-stack-height) + var(--space-xs) + env(safe-area-inset-bottom,0px));max-height:calc(100dvh - var(--dock-stack-height) - 3 * var(--space-sm) - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px))}
 @container detail (max-width:855px){.detail-page .case-study{padding-bottom:calc(var(--dock-bottom) + var(--dock-stack-height) + 2 * var(--space-sm))}.detail-page .case-study :is([tabindex],a){scroll-margin-bottom:calc(var(--dock-bottom) + var(--dock-stack-height) + var(--space-sm))}}
 /* Navigation stays visible without competing with the project content. */

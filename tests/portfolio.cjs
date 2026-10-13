@@ -125,13 +125,14 @@ for (const mode of ['light','dark']) {
       }
     }
     await motionPage.close();
-    const homePage=await browser.newPage();
+    const homePage=await browser.newPage({hasTouch:true});
+    const homeCDP=await homePage.context().newCDPSession(homePage);
     homePage.on('pageerror',e=>errors.push(e.message));
     await homePage.emulateMedia({reducedMotion:'reduce'});
     const homeRoutes=['/',pages[1],'/writing/','/writing/so-arm100101-lerobot-isaac-sim/','/writing/install-isaac-lab-in-5-minutes-with-pixi/'];
-    for(const route of homeRoutes) for(const width of [320,375,904,1440]) {
+    for(const route of homeRoutes) for(const width of [320,375,414,768,904,1440]) for(const mode of ['light','dark']) {
       await homePage.setViewportSize({width,height:width===1440?450:900});
-      await homePage.goto(origin+route+'?theme=dark');
+      await homePage.goto(origin+route+'?theme='+mode);
       await homePage.evaluate(()=>document.fonts.ready);
       const compact=await homePage.locator('.phone-dock').isVisible();
       const shortcut=homePage.locator(compact?'.phone-dock>.home-link':'aside>.home-link');
@@ -157,7 +158,25 @@ for (const mode of ['light','dark']) {
         }
       }
       if(compact) {
-        await homePage.locator('.say-hi').click();
+        await shortcut.focus();
+        await homePage.keyboard.press('Tab');
+        assert(await homePage.locator('.say-hi').evaluate(e=>e===document.activeElement && e.matches(':focus-visible')),'Keyboard order follows name then contact');
+        await homePage.keyboard.press('Tab');
+        assert(await homePage.locator('.phone-dock nav a').first().evaluate(e=>e===document.activeElement && e.matches(':focus-visible')),'Keyboard order continues to the section row');
+        assert(await homePage.locator('.phone-dock').evaluate(e=>{
+          const dock=e.getBoundingClientRect(),nav=e.querySelector('nav').getBoundingClientRect();
+          const name=e.querySelector('.home-link').getBoundingClientRect(),contact=e.querySelector('.say-hi').getBoundingClientRect();
+          return dock.height===91 && nav.width===dock.width-2 && name.top===contact.top && nav.top>=name.bottom
+            && contact.height>=44 && contact.width>=44 && innerHeight-dock.bottom>=12;
+        }),'Unified dock is 91px tall, retains 44px targets and gives sections the full row');
+        assert(await homePage.locator('.phone-dock nav a').evaluateAll(nodes=>nodes.every(e=>{
+          const r=e.getBoundingClientRect();return r.height>=44 && r.width>=44;
+        })),'Every compact section retains a 44px target');
+        assert(await homePage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Compact toolbar does not widen the page');
+        const section=homePage.locator('.phone-dock nav a').last();
+        await section.tap();
+        assert.equal(await homePage.evaluate(()=>document.activeElement.id),await section.getAttribute('data-section'),'Touch navigation lands and focuses the heading');
+        await homePage.locator('.say-hi').tap();
         assert(await homePage.locator('#contact-menu').evaluate(e=>{
           const r=e.getBoundingClientRect(),dock=document.querySelector('.phone-dock').getBoundingClientRect();
           return r.top>=0 && r.bottom<dock.top;
@@ -171,8 +190,21 @@ for (const mode of ['light','dark']) {
           const main=document.querySelector('.content,.case-study'),last=main.lastElementChild;
           return last.getBoundingClientRect().bottom<=document.querySelector('.phone-dock').getBoundingClientRect().top;
         }),'Last content clears the full dock');
+        await homeCDP.send('Emulation.setSafeAreaInsetsOverride',{insets:{bottom:34}});
+        await homePage.waitForFunction(()=>innerHeight-document.querySelector('.phone-dock').getBoundingClientRect().bottom===46);
+        await homePage.evaluate(()=>{
+          const region=document.querySelector('.page-scroll');
+          if(region) region.scrollTop=region.scrollHeight; else window.scrollTo(0,document.body.scrollHeight);
+        });
+        assert(await homePage.evaluate(()=>document.querySelector('.content,.case-study').lastElementChild.getBoundingClientRect().bottom<=document.querySelector('.phone-dock').getBoundingClientRect().top),'Last content clears the dock with a 34px safe area');
+        await homePage.locator('.say-hi').tap();
+        assert(await homePage.locator('#contact-menu').evaluate(e=>{
+          const r=e.getBoundingClientRect();return r.top>=0 && r.bottom<document.querySelector('.phone-dock').getBoundingClientRect().top;
+        }),'Contact menu clears the dock with a 34px safe area');
+        await homePage.keyboard.press('Escape');
+        await homeCDP.send('Emulation.setSafeAreaInsetsOverride',{insets:{}});
       }
-      if([375,1440].includes(width)) await homePage.screenshot({path:path.join(out,`home-shortcut-${route==='/'?'home':route.replaceAll('/','-')}-${width}.png`)});
+      await homePage.screenshot({path:path.join(out,`home-shortcut-${route==='/'?'home':route.replaceAll('/','-')}-${width}-${mode}.png`)});
       await shortcut.focus();
       assert(await shortcut.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle!=='none'),'Home shortcut has keyboard focus');
       await homePage.keyboard.press('Enter');
@@ -183,7 +215,7 @@ for (const mode of ['light','dark']) {
         const delta=home.getBoundingClientRect().top-region.getBoundingClientRect().top;
         return delta>=0 && delta<=9;
       });
-      assert.equal(await homePage.locator('html').getAttribute('data-mode'),'dark');
+      assert.equal(await homePage.locator('html').getAttribute('data-mode'),mode);
     }
     for(const route of ['/',pages[1],'/writing/','/writing/install-isaac-lab-in-5-minutes-with-pixi/']) for(const width of [375,1440]) for(const mode of ['light','dark']) {
       await homePage.setViewportSize({width,height:900});
