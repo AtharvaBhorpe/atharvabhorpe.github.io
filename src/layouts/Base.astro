@@ -10,13 +10,15 @@ const { title, description, home = false } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content={description} />
-    <title>{title} — Atharva Bhorpe</title>
+    <title>{home ? title : `${title} | Atharva Bhorpe`}</title>
     <script is:inline src="/theme.js"></script>
     <script is:inline src="/navigation.js"></script>
     <link rel="icon" href="data:," />
   </head>
   <body class={home ? 'home-page' : 'detail-page'}>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <slot />
     <script is:inline src="/ui.js"></script>
+    <script is:inline src="/motion.js"></script>
   </body>
 </html>

@@ -1,6 +1,7 @@
 ---
 import Contact from './Contact.astro';
 import Theme from './Theme.astro';
+import { profile } from '../data/site';
 interface Props {
   detail?: boolean;
   backHref?: string;
@@ -10,30 +11,22 @@ interface Props {
 }
 const { detail = false, contents = false, sections, backHref = '/#projects', backLabel = 'Projects' } = Astro.props;
 ---
-<aside class={detail ? 'detail-sidebar' : 'rail'} aria-label={detail ? 'Project navigation' : 'Portfolio sidebar'}>
-  <a class="name home-link" href={detail ? '/#home' : '#home'} data-section={detail ? undefined : 'home'}>Atharva <span>Bhorpe</span></a>
-  {detail && <a class="back" href={backHref}><span aria-hidden="true">←</span> {backLabel}</a>}
-  <nav class={detail ? 'sections' : 'rail-group'} aria-label={detail ? 'On this page' : 'Desktop navigation'}>
-    {sections.map(section => <a href={`#${section.id}`} data-section={section.id}>{section.label}</a>)}
-  </nav>
-  <Contact />
-  <Theme />
+<aside class:list={['site-navigation', detail ? 'detail-sidebar' : 'rail']} aria-label="Portfolio navigation">
+  <div class="identity-row">
+    <a class="name home-link" href="/#home">Atharva Bhorpe</a>
+    <div class="identity-actions"><Theme /><button class="menu-toggle" type="button" aria-controls="navigation-panel" aria-expanded="false" hidden>Menu</button></div>
+  </div>
+  <div id="navigation-panel" class="navigation-panel">
+    {detail && <a class="back" href={backHref}>← Back to {backLabel}</a>}
+    <nav class="sections" aria-label={contents ? 'Article contents' : detail ? 'On this page' : 'Sections'}>
+      {sections.map(section => <a href={`#${section.id}`} data-section={section.id} class={section.depth === 3 ? 'subsection' : undefined}>{section.label}</a>)}
+    </nav>
+    {detail ? <Contact /> : <>
+      <nav class="profile-links" aria-label="Professional profiles">
+        <a href={profile.github} target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+        <a href={profile.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>
+      </nav>
+      <a class="resume-link secondary-action" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume <span aria-hidden="true">↗</span></a>
+    </>}
+  </div>
 </aside>
-<div class:list={['phone-dock', { 'single-row': sections.length === 1 }]}>
-  <a class="home-link" href={detail ? '/#home' : '#home'} data-section={detail ? undefined : 'home'}>Atharva Bhorpe</a>
-  <button class="say-hi" type="button" popovertarget="contact-menu" aria-controls="contact-menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 13 6 7a1.5 1.5 0 0 1 3-1l2 5-2-7a1.5 1.5 0 0 1 3-1l2 7-1-6a1.5 1.5 0 0 1 3 0l1 6V7a1.5 1.5 0 0 1 3 0v8c0 4-3 6-6 6-3 0-5-2-7-4l-3-4a1.5 1.5 0 0 1 2-2Z" /></svg>Say Hi</button>
-  {sections.length > 1 && <>
-  {detail && !contents && <p class="section-scroll-hint" hidden>Sections · swipe ↔</p>}
-  {contents && <button class="contents-button" type="button" popovertarget="article-contents" aria-controls="article-contents" aria-expanded="false">Contents <span class="contents-current">Overview</span><span aria-hidden="true">▾</span></button>}
-  <nav id={contents ? 'article-contents' : undefined} class={contents ? 'contents-menu' : undefined} popover={contents ? 'auto' : undefined} aria-label={contents ? 'Article contents' : detail ? 'Project sections' : 'Phone navigation'}>
-    {sections.map(section => <a href={`#${section.id}`} data-section={section.id} class={contents && section.depth === 3 ? 'subsection' : undefined}>
-      {section.icon && <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={section.icon} /></svg>}
-      {section.label}
-    </a>)}
-  </nav>
-  </>}
-</div>
-<div id="contact-menu" class="contact-menu" popover="auto" role="group" aria-label="Contact Atharva">
-  <Contact mobile />
-  <Theme />
-</div>

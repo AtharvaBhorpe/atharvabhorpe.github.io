@@ -1,9 +1,53 @@
 ---
 import { writing } from '../data/writing';
+import { getCollection } from 'astro:content';
+interface Props { featured?: boolean }
+const { featured = false } = Astro.props;
+const articles = featured ? [] : await getCollection('writing');
+const guides = articles.filter(article => !writing.some(entry => entry.url === `/writing/${article.id}/`));
+const resources = writing.flatMap(entry => {
+  const parent = articles.find(article => entry.url === `/writing/${article.id}/`);
+  const position = (id: string) => {
+    const index = parent?.body?.indexOf(`/writing/${id}/`) ?? -1;
+    return index < 0 ? Infinity : index;
+  };
+  return [entry, ...guides
+    .filter(article => parent && article.data.parent?.id === parent.id)
+    .sort((a, b) => position(a.id) - position(b.id) || a.data.title.localeCompare(b.data.title))
+    .map(article => ({ kind: 'Guide', title: article.data.title, url: `/writing/${article.id}/` }))];
+});
+resources.push(...guides
+  .filter(article => !resources.some(entry => entry.url === `/writing/${article.id}/`))
+  .sort((a, b) => a.data.title.localeCompare(b.data.title))
+  .map(article => ({ kind: 'Guide', title: article.data.title, url: `/writing/${article.id}/` })));
 ---
+{featured ? <>
+  <div class="writing-stories">
+    <article class="story story-main">
+      <figure><div class="story-media" data-reveal="fade" data-duration="520"><img src="/images/trm-demo-grid.jpg" width="965" height="965" alt="Recorded occupancy grid with obstacles and a path overlay" loading="lazy" /></div><figcaption>Recorded path example.</figcaption></figure>
+      <h3>Path planning with TRM</h3>
+      <p>Teach a Tiny Recursive Model to predict moves on occupancy grids.</p>
+      <p class="story-kind">Tutorial · PyTorch · Transformers</p>
+      <a class="action" href={writing[0].url} aria-label="Read tutorial: Tiny Recursive Model path planning">Read tutorial <span class="arrow" aria-hidden="true">↗</span></a>
+    </article>
+    <article class="story story-left">
+      <figure><div class="story-media" data-reveal="fade" data-duration="520" data-delay="80"><div class="isaac-crop"><img src="/images/writing/isaac-lab-pixi.png" width="1920" height="1080" alt="Simulated robots in Isaac Lab on a gray grid" loading="lazy" /></div></div><figcaption>Simulation environment.</figcaption></figure>
+      <div class="side-caption"><h3>Isaac Lab with Pixi</h3><p>Set up Isaac Lab with Pixi.</p><p class="story-kind">Setup tutorial</p><a class="action" href={writing[1].url} aria-label="Read tutorial: Isaac Lab with Pixi">Read tutorial <span class="arrow" aria-hidden="true">↗</span></a></div>
+    </article>
+    <article class="story story-right">
+      <figure><div class="story-media" data-reveal="fade" data-duration="520" data-delay="160"><img src="/images/writing/so-arm-overview.png" width="1536" height="1024" alt="Illustrated tutorial cover for SO-ARM, LeRobot and Isaac Sim" loading="lazy" /></div><figcaption>Tutorial illustration.</figcaption></figure>
+      <div class="side-caption"><h3>SO-ARM100/101</h3><p>Connect LeRobot and Isaac Sim.</p><p class="story-kind">Integration tutorial · Illustration</p><a class="action" href={writing[2].url} aria-label="Read tutorial: SO-ARM100/101 with LeRobot and Isaac Sim">Read tutorial <span class="arrow" aria-hidden="true">↗</span></a></div>
+    </article>
+  </div>
+  <div class="writing-more">
+    <a class="writing-row" data-reveal="fade" data-duration="520" href={writing[3].url}><span class="kind">Read guide</span><span>Robotic arm control using IMU<small>Follow the ESP32 sensor-to-simulation guide.</small></span><span class="arrow" aria-hidden="true">↗</span></a>
+    <a class="writing-row" data-reveal="fade" data-duration="520" data-delay="80" href={writing[4].url}><span class="kind">Watch video</span><span>SO-ARM101 in Isaac Sim + ROS 2 + MoveIt 2<small>Watch the simulation video.</small></span><span class="arrow" aria-hidden="true">↗</span></a>
+    <a class="all-writing secondary-action" href="/writing/">All writing <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
+</> :
 <div class="writing-list">
-  {writing.map(entry => <a class="writing-row" href={entry.url}><span class="kind">{entry.kind}</span><span>{entry.title}</span></a>)}
-</div>
+  {resources.map(entry => <a class="writing-row" href={entry.url}><span class="kind">{entry.kind}</span><span>{entry.title}</span></a>)}
+</div>}
 <style>
   .writing-list{container:writing-list / inline-size}
   .writing-row{--row-inset:12px;position:relative;display:grid;grid-template-columns:70px minmax(0,1fr);gap:12px;min-height:44px;padding:12px var(--row-inset);margin-inline:calc(-1 * var(--row-inset));border-top:1px solid transparent;border-radius:var(--radius-panel);color:inherit;text-decoration:none;font:14px/1.5 var(--font-body)}
