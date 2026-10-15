@@ -1,9 +1,11 @@
 // Approved preference: URL plus guarded storage. Initialize before CSS/body paint.
 (() => {
   const root = document.documentElement;
+  const modes = ['light', 'dark', 'system'];
+  const names = { light: 'Light', dark: 'Dark', system: 'System' };
   const normalize = value => {
     if (value === 'bright') return 'light';
-    return ['light', 'dark', 'system'].includes(value) ? value : null;
+    return modes.includes(value) ? value : null;
   };
   const query = new URLSearchParams(location.search);
   const explicit = normalize(query.get('theme'));
@@ -11,6 +13,7 @@
     try { return normalize(localStorage.getItem('portfolio-approved-theme')); } catch { return null; }
   };
   let mode = explicit || storedMode() || 'system';
+  const nextMode = () => modes[(modes.indexOf(mode) + 1) % modes.length];
   const remember = () => {
     try { localStorage.setItem('portfolio-approved-theme', mode); } catch { /* URL remains the fallback. */ }
   };
@@ -33,7 +36,12 @@
     root.dataset.mode = mode;
     root.dataset.resolved = mode === 'system' ? systemMode : mode;
     if (!document.body) return;
-    document.querySelectorAll('.preview-theme').forEach(select => { select.value = mode; });
+    document.querySelectorAll('.theme-toggle').forEach(button => {
+      const label = `Theme: ${names[mode]}. Switch to ${names[nextMode()]}.`;
+      button.setAttribute('aria-label', label);
+      button.title = label;
+      button.hidden = false;
+    });
     for (const link of document.querySelectorAll('a[href]')) {
       const href = link.getAttribute('href');
       if (href.startsWith('#')) continue;
@@ -64,12 +72,12 @@
   apply();
   document.addEventListener('DOMContentLoaded', () => {
     apply();
-    document.querySelectorAll('.preview-theme').forEach(select => {
-      select.addEventListener('change', event => window.portfolioTheme.setMode(event.target.value));
-    });
-    const menu = document.querySelector('#contact-menu');
-    menu.addEventListener('focusin', event => {
-      if (event.target.closest('.appearance-control')) event.target.scrollIntoView({ block: 'nearest' });
+    document.querySelectorAll('.theme-toggle').forEach(button => {
+      button.addEventListener('click', () => {
+        window.portfolioTheme.setMode(nextMode());
+        const status = document.querySelector('.theme-status');
+        if (status) status.textContent = `${names[mode]} theme selected.`;
+      });
     });
   });
   window.addEventListener('pageshow', event => {

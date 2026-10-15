@@ -1,127 +1,78 @@
-
-const sidebar = document.querySelector('.detail-sidebar,.rail');
-const scrollRegion = document.querySelector('.page-scroll');
-const dock = document.querySelector('.phone-dock');
-const strip = dock.querySelector('nav');
-const contentsButton = dock.querySelector('.contents-button');
-const menu = document.querySelector('#contact-menu');
-const menuButton = document.querySelector('.say-hi');
-const sectionLinks = [...sidebar.querySelectorAll('[data-section]')];
-const allLinks = [...document.querySelectorAll('[data-section]')];
-let activeSection;
-let wasCompact;
-let swiping = false;
-let pointerStart;
-let revealAfter = 0;
-// Move only the strip, never the article. Manual swipes keep their chosen position.
-function revealLink(link) {
-  if (!strip || contentsButton) return;
-  const tab = link.getBoundingClientRect(), rail = strip.getBoundingClientRect();
-  if (tab.left < rail.left + 5) strip.scrollLeft += tab.left - rail.left - 5;
-  else if (tab.right > rail.right - 5) strip.scrollLeft += tab.right - rail.right + 5;
-}
-strip?.addEventListener('pointerdown', event => { pointerStart = [event.clientX, event.clientY]; });
-strip?.addEventListener('pointermove', event => {
-  if (pointerStart) {
-    const dx = Math.abs(event.clientX - pointerStart[0]), dy = Math.abs(event.clientY - pointerStart[1]);
-    if (dx > 8 && dx > dy) swiping = true;
+(() => {
+  const sidebar = document.querySelector('.site-navigation');
+  const panel = sidebar.querySelector('#navigation-panel');
+  const button = sidebar.querySelector('.menu-toggle');
+  const content = document.querySelector('main');
+  const compact = matchMedia('(max-width:1199px)');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let open = false;
+  let animation;
+  function close(restoreFocus = true) {
+    animation?.cancel();
+    open = false;
+    content.inert = false;
+    panel.hidden = compact.matches;
+    button.setAttribute('aria-expanded', 'false');
+    if (restoreFocus && compact.matches) button.focus({ preventScroll:true });
   }
-}, { passive:true });
-for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type, () => {
-  pointerStart = null;
-  if (swiping) { swiping = false; revealAfter = performance.now() + 800; }
-}, { passive:true });
-strip?.addEventListener('wheel', event => {
-  if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) revealAfter = performance.now() + 800;
-}, { passive:true });
-strip?.addEventListener('focusin', event => {
-  if (event.target.matches('a')) revealLink(event.target);
-});
-// A breakpoint can hide the focused link before the resize event runs.
-for (const region of [sidebar, dock]) region.addEventListener('focusout', event => {
-  if (!event.relatedTarget && !region.getClientRects().length) requestAnimationFrame(() => {
-    if (document.activeElement === document.body) {
-      const target = dock.getClientRects().length ? contentsButton || strip?.querySelector('[aria-current]') || dock.querySelector('.home-link') : sidebar.querySelector('[aria-current]');
-      target.focus({ preventScroll:true });
-    }
-  });
-});
-function updateNavigation() {
-  const current = sectionLinks.find(link => link.dataset.section === portfolioNavigation.current());
-  const compact = dock.getClientRects().length > 0;
-  for (const link of allLinks) {
-    if (link.dataset.section === current.dataset.section) link.setAttribute('aria-current', 'location');
-    else link.removeAttribute('aria-current');
+  function sync() {
+    const hadFocus = panel.contains(document.activeElement);
+    animation?.cancel();
+    panel.hidden = compact.matches && !open;
+    content.inert = compact.matches && open;
+    button.setAttribute('aria-expanded', String(compact.matches && open));
+    if (compact.matches && panel.hidden && hadFocus) button.focus({ preventScroll:true });
+    else if (!compact.matches && document.activeElement === button) (panel.querySelector('[aria-current]') || panel.querySelector('a')).focus({ preventScroll:true });
   }
-  const dockCurrent = strip?.querySelector('[aria-current]') || dock.querySelector('.home-link');
-  if (contentsButton) contentsButton.querySelector('.contents-current').textContent = current.textContent;
-  if (compact && (activeSection !== current.dataset.section || !wasCompact) && !swiping && performance.now() >= revealAfter) revealLink(dockCurrent);
-  if (!compact) {
-    const hadFocus = menu.contains(document.activeElement) || dock.contains(document.activeElement);
-    if (menu.matches(':popover-open')) menu.hidePopover();
-    if (contentsButton && strip.matches(':popover-open')) strip.hidePopover();
-    if (hadFocus) current.focus({ preventScroll:true });
-  } else if (sidebar.contains(document.activeElement)) (contentsButton || dockCurrent).focus({ preventScroll:true });
-  activeSection = current.dataset.section;
-  wasCompact = compact;
-}
-allLinks.forEach(link => link.addEventListener('click', event => {
-  if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && event.button === 0) revealAfter = 0;
-}));
-(scrollRegion || window).addEventListener('scroll', updateNavigation, { passive:true });
-window.addEventListener('resize', updateNavigation);
-window.visualViewport?.addEventListener('resize', updateNavigation);
-new ResizeObserver(updateNavigation).observe(document.querySelector('.detail-shell,.stage'));
-updateNavigation();
-if (contentsButton) {
-  strip.addEventListener('beforetoggle', event => {
-    contentsButton.setAttribute('aria-expanded', String(event.newState === 'open'));
+  sidebar.dataset.enhanced = 'true';
+  button.hidden = false;
+  sync();
+  window.portfolioMenu = { close };
+  button.addEventListener('click', () => {
+    if (open) { close(); return; }
+    open = true;
+    content.inert = true;
+    panel.hidden = false;
+    button.setAttribute('aria-expanded', 'true');
+    animation?.cancel();
+    if (!reduced.matches && panel.animate) animation = panel.animate([{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:200,easing:'cubic-bezier(0.23,1,0.32,1)'});
   });
-  strip.addEventListener('toggle', event => {
-    if (event.newState === 'open') {
-      const current = strip.querySelector('[aria-current]');
-      current.focus({ preventScroll:true });
-      current.scrollIntoView({ block:'nearest', behavior:'instant' });
-    }
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && open && compact.matches) { event.preventDefault(); close(); }
   });
-}
-menu.addEventListener('beforetoggle', event => {
-  menuButton.setAttribute('aria-expanded', String(event.newState === 'open'));
-});
-menu.addEventListener('toggle', event => {
-  const open = event.newState === 'open';
-  if (open) {
-    menu.querySelector('.copy-status').textContent = '';
-    menu.querySelector('.email-fallback').hidden = true;
-    if (!menu.contains(document.activeElement)) menu.querySelector('a').focus({ preventScroll:true });
-  } else if (menu.contains(document.activeElement) && dock.getClientRects().length) menuButton.focus({ preventScroll:true });
-});
-document.querySelectorAll('.copy-email').forEach(copyButton => {
-  const scope = copyButton.closest('.copy-scope');
-  const copyStatus = scope.querySelector('.copy-status');
-  const fallback = scope.querySelector('.email-fallback');
-  const email = copyButton.dataset.email;
-  fallback.querySelector('input').value = email;
-  copyButton.addEventListener('click', async () => {
-    copyButton.disabled = true;
-    copyButton.setAttribute('aria-busy', 'true');
-    copyStatus.textContent = '';
-    try {
-      if (!navigator.clipboard || (document.featurePolicy && !document.featurePolicy.allowsFeature('clipboard-write'))) throw new Error('Clipboard unavailable');
-      await navigator.clipboard.writeText(email);
-      copyStatus.textContent = 'Email copied.';
-      fallback.hidden = true;
-    } catch {
-      copyStatus.textContent = 'Copy unavailable. Select the address and copy it manually.';
-      fallback.hidden = false;
-      if (!menu.contains(scope) || menu.matches(':popover-open')) {
-        fallback.querySelector('input').focus({ preventScroll:menu.contains(scope) });
-        fallback.querySelector('input').select();
-        if (menu.contains(scope)) fallback.scrollIntoView({ block:'nearest' });
+  document.addEventListener('pointerdown', event => {
+    if (open && compact.matches && !panel.contains(event.target) && !button.contains(event.target)) close(false);
+  });
+  document.addEventListener('focusin', event => {
+    if (open && compact.matches && !panel.contains(event.target) && event.target !== button) close(false);
+  });
+  compact.addEventListener('change', sync);
+  reduced.addEventListener('change', () => animation?.cancel());
+  document.querySelectorAll('.copy-email').forEach(copyButton => {
+    const scope = copyButton.closest('.copy-scope');
+    const status = scope.querySelector('.copy-status');
+    const fallback = scope.querySelector('.email-fallback');
+    const input = fallback.querySelector('input');
+    const email = copyButton.dataset.email;
+    input.value = email;
+    copyButton.addEventListener('click', async () => {
+      copyButton.disabled = true;
+      copyButton.setAttribute('aria-busy', 'true');
+      status.textContent = '';
+      try {
+        if (!navigator.clipboard || (document.featurePolicy && !document.featurePolicy.allowsFeature('clipboard-write'))) throw new Error('Clipboard unavailable');
+        await navigator.clipboard.writeText(email);
+        status.textContent = 'Email copied.';
+        fallback.hidden = true;
+      } catch {
+        status.textContent = 'Copy unavailable. Select the address and copy it manually.';
+        fallback.hidden = false;
+        input.focus();
+        input.select();
+      } finally {
+        copyButton.disabled = false;
+        copyButton.removeAttribute('aria-busy');
       }
-    } finally {
-      copyButton.disabled = false;
-      copyButton.removeAttribute('aria-busy');
-    }
+    });
   });
-});
+})();

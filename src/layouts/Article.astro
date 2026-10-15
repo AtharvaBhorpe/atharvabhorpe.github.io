@@ -15,10 +15,9 @@ const sections = [{ id:'overview', label:'Overview' }, ...headings.filter(h=>h.d
 ---
 <Base title={title} description={description}>
   <div class="detail-shell article-shell">
-    <a class="back compact-back" href={backHref}>← Back to {backLabel}</a>
     <div class="detail-layout">
       <Navigation detail contents sections={sections} backHref={backHref} backLabel={backLabel} />
-      <main class="case-study">
+      <main class="case-study" id="main-content">
         <header class="panel"><p class="eyebrow">Atharva Bhorpe · Writing</p><h1 id="overview" tabindex="-1">{title}</h1><p class="summary">{description}</p></header>
         <slot />
         <a class="back" href={backHref}>← Back to {backLabel}</a>
@@ -63,9 +62,6 @@ const sections = [{ id:'overview', label:'Overview' }, ...headings.filter(h=>h.d
   }
 </script>
 <style is:global>
-  .article-shell{max-width:1156px}
-  .article-shell .detail-layout{grid-template-columns:248px minmax(0,1fr)}
-  .article-shell .detail-sidebar{width:248px;scrollbar-width:thin}
   .article-shell .back{max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
   .article-shell .sections{min-width:0}
   .article-shell .sections a{width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.45;border-radius:var(--radius-panel);padding:10px}
@@ -83,7 +79,7 @@ const sections = [{ id:'overview', label:'Overview' }, ...headings.filter(h=>h.d
   .article-shell .prose pre{max-width:100%;padding:12px;border:1px solid var(--color-rule);border-radius:var(--radius-panel);overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--rule-control) transparent;color-scheme:dark;font-size:13px;line-height:1.55;overflow-wrap:normal;tab-size:2}
   .article-shell .prose .code-block{margin:0 0 1.25em;border:1px solid var(--color-rule);border-radius:var(--radius-panel)}
   .article-shell .code-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 8px;padding:0 8px 0 12px;border-bottom:1px solid var(--color-rule);border-radius:var(--radius-panel) var(--radius-panel) 0 0;background:var(--surface-navigation);font:12px/1.5 var(--font-detail)}
-  .article-shell .code-toolbar button{display:grid;place-items:center;min-width:32px;min-height:32px;padding:8px;border:0;border-radius:var(--space-xs);background:transparent;color:var(--text-primary);cursor:pointer}
+  .article-shell .code-toolbar button{display:grid;place-items:center;min-width:44px;min-height:44px;padding:8px;border:0;border-radius:var(--space-xs);background:transparent;color:var(--text-primary);cursor:pointer}
   @media(any-pointer:coarse),(max-width:500px){.article-shell .code-toolbar button{min-width:44px;min-height:44px}}
   .article-shell .code-toolbar button:disabled{cursor:wait;opacity:.6}
   .article-shell .code-toolbar button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}

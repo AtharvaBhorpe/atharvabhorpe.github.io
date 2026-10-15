@@ -1,49 +1,51 @@
 ---
 import Base from '../layouts/Base.astro';
 import Navigation from '../components/Navigation.astro';
-import { getCollection } from 'astro:content';
-import { profile, homeSections } from '../data/site';
+import Contact from '../components/Contact.astro';
 import WritingList from '../components/WritingList.astro';
+import { getCollection } from 'astro:content';
+import { homeSections, homeProjects } from '../data/site';
 import '../styles/home.css';
-const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const projects = await getCollection('projects');
 ---
-<Base home title="Robotics portfolio" description="Atharva Bhorpe's robotics projects, model development and tutorials.">
-  <div class="page-scroll" role="region" aria-label="Portfolio" tabindex="-1">
-    <main class="stage" aria-label="Atharva Bhorpe portfolio">
-      <div class="layout">
-        <Navigation sections={homeSections} />
-        <div class="content">
-          <div class="mobile-head"><div class="name">Atharva Bhorpe</div></div>
-          <section class="intro panel" id="home" tabindex="-1">
-            <img class="portrait" src="/images/portrait.png" width="192" height="192" alt="Portrait of Atharva Bhorpe" />
-            <div class="intro-copy">
-              <h1>Hi, I’m Atharva.</h1>
-              <p class="positioning">Building learning-based robotic systems.</p>
-              <p>Robotics master’s student at RWTH Aachen. Mechanical engineering and industrial automation background.</p>
-              <nav class="intro-contact" aria-label="Profile links"><a class="resume-link" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume</a><a href={profile.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
-            </div>
-          </section>
-          <section class="projects panel" aria-labelledby="projects">
-            <div class="section-header"><h2 class="section-head" id="projects" tabindex="-1">Selected projects</h2></div>
-            {projects.map(({ id, data: p }) => {
-              const words = p.title.split(' '), lastWord = words.pop();
-              const [result, ...contribution] = p.outcome.split(' · ');
-              return <a class="project project-link" href={`/projects/${id}/`}>
-              <h3>{words.join(' ')} <span class="title-end">{lastWord}<span class="arrow" aria-hidden="true">↗</span></span></h3>
-              <div class:list={['project-body', { 'no-image': !p.image && !p.demo }]}>
-                <dl class="facts"><dt>Objective</dt><dd>{p.objective}</dd><dt>Details / role</dt><dd><strong>{result}</strong> · {contribution.join(' · ')}</dd><dt>Tools</dt><dd>{p.tools}</dd></dl>
-                {(p.image || p.demo) && <img class="thumbnail" src={p.thumbnail || p.demo?.poster || p.image} alt={p.thumbnailAlt || p.imageAlt || `Project visual for ${p.title}`} loading="lazy" />}
+<Base home title="Atharva Bhorpe | Robotics projects and writing" description="Explore Atharva Bhorpe’s robotics projects, engineering contributions and technical tutorials.">
+  <div class="page-scroll">
+    <div class="stage layout">
+      <Navigation sections={homeSections} />
+      <main class="content" id="main-content">
+        <section class="hero" id="home" tabindex="-1" aria-labelledby="intro-heading">
+          <div class="hero-portrait" id="about" tabindex="-1"><img data-hero="media" src="/images/portrait.png" width="1254" height="1254" alt="Portrait of Atharva Bhorpe" fetchpriority="high" /></div>
+          <div class="hero-copy" data-hero="intro">
+            <h1 id="intro-heading">I build learning-based robotic systems.</h1>
+            <p>I’m Atharva Bhorpe, a robotics master’s student at RWTH Aachen with a background in mechanical engineering and industrial automation.</p>
+            <div class="hero-actions"><a class="action" href="#projects">Explore projects <span class="arrow" aria-hidden="true">↓</span></a><a class="secondary-action" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume <span class="arrow" aria-hidden="true">↗</span></a></div>
+          </div>
+        </section>
+        <section class="projects" id="projects" tabindex="-1" aria-labelledby="projects-heading">
+          <h2 id="projects-heading">Selected projects</h2>
+          {homeProjects.map(p => {
+            const project = projects.find(project => project.id === p.id);
+            if (!project) throw new Error(`Missing project: ${p.id}`);
+            return <article class:list={['project-record', { 'project-with-media': p.id === 'tiny-recursive-model' || p.id === 'cost-effective-amr' }]} aria-labelledby={`title-${p.id}`}>
+              <h3 id={`title-${p.id}`}>{p.title}</h3>
+              {p.id === 'tiny-recursive-model' && <figure class="project-media lead-figure">
+                <div class="lead-frame"><video controls playsinline preload="metadata" poster="/images/trm-demo-poster.jpg" width="1920" height="1200" aria-label="Tiny Recursive Model path-planning demonstration" aria-describedby="demo-caption"><source src="/media/trm-training-and-path-demo.mp4" type="video/mp4" /><a href="/media/trm-training-and-path-demo.mp4">Open the recording</a></video></div>
+                <figcaption id="demo-caption">Recorded tutorial demonstration; evaluation not independently reproduced.</figcaption>
+              </figure>}
+              {p.id === 'cost-effective-amr' && <figure class="project-media rbot-figure"><div class="rbot-frame"><img data-reveal="slide" data-duration="620" src="/images/amr-prototypes.png" width="675" height="520" alt="RBot initial prototype, rocker mechanism and final prototype" loading="lazy" /></div><figcaption data-reveal="fade" data-delay="80">Initial prototype, rocker mechanism and final RBot prototype.</figcaption></figure>}
+              <div class="project-copy" data-reveal="fade" data-duration="480">
+                <dl class="facts"><dt>Objective</dt><dd>{p.objective}</dd><dt>My contribution</dt><dd>{p.contribution}</dd><dt>Tools</dt><dd>{project.data.tools}</dd><dt>Scope</dt><dd>{p.scope}</dd></dl>
+                <a class="secondary-action project-link" href={`/projects/${p.id}/`} aria-label={`View project: ${p.title}`}>View project <span class="arrow" aria-hidden="true">↗</span></a>
               </div>
-            </a>;
-            })}
-          </section>
-          <section class="writing panel" aria-labelledby="writing">
-            <div class="writing-head section-header"><h2 class="section-head" id="writing" tabindex="-1">Writing</h2><a href={profile.writing}>All writing →</a></div>
-            <WritingList />
-          </section>
-          <footer><span>Aachen, Germany</span></footer>
-        </div>
-      </div>
-    </main>
+            </article>;
+          })}
+        </section>
+        <section class="writing" id="writing" tabindex="-1" aria-labelledby="writing-heading">
+          <h2 id="writing-heading">Writing & tutorials</h2>
+          <WritingList featured />
+        </section>
+        <Contact footer />
+      </main>
+    </div>
   </div>
 </Base>
