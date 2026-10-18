@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const html = readFileSync('dist/projects/autonomous-insertion/index.html', 'utf8');
+const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+assert.equal(new Set(ids).size, ids.length, 'Unique article/diagram IDs');
+for (const [, target] of html.matchAll(/href="#([^"]+)"/g)) assert(ids.includes(decodeURIComponent(target)), `Missing #${target}`);
+for (const id of ['end-to-end-architecture', 'collection-and-dagger', 'training-and-evaluation', 'architecture-caption', 'dagger-caption']) assert(ids.includes(id));
+assert.equal((html.match(/class="technical-flow(?: [^"]*)?"/g) || []).length, 2);
+for (const text of ['vision-conditioned Diffusion Policy, not a language-conditioned VLA', '1,206', '1,334', '18-value', '32 × 9', 'programmed simulator oracle', 'does not create a held-out validation split', 'ImageNet', 'UR5e', '176/300', '86/100', '50/100 locally', '1/100 on the evaluation portal']) assert(html.includes(text), text);
+assert(!/href="https:\/\/github\.com\/[^" ]+\/(?:blob|tree)\//.test(html), 'No repository-source links in the public explanation');
+assert(!/\/home\/|HPCWORK|model\.safetensors/.test(html), 'No private provenance in public output');
+assert(html.includes('Dimensions describe the configuration, not an independently verified competition checkpoint.'));
+assert(html.includes('data-network-panel'));
+assert(!/mechanical metaphor|optical tape tabulator|architecture-controls/.test(html));
+assert(!html.includes('data-policy-architecture-placeholder'));
+console.log('Insertion article: diagrams, anchors, architecture facts, score caveats and privacy checks passed.');

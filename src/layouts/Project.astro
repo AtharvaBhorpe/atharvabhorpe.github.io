@@ -1,10 +1,20 @@
 ---
 import Base from './Base.astro';
 import Navigation from '../components/Navigation.astro';
+import architecture from '../data/policy-architecture.json';
 import '../styles/detail.css';
+import '../styles/insertion.css';
+import '../styles/policy-architecture.css';
 import type { CollectionEntry } from 'astro:content';
 interface Props { project: CollectionEntry<'projects'>; headings: { depth: number; slug: string; text: string }[] }
 const { project, headings } = Astro.props;
+const architectureMarker = '<div data-policy-architecture-placeholder></div>';
+let architectureContent = '';
+if (project.id === 'autonomous-insertion') {
+  const content = await Astro.slots.render('default');
+  if (!content.includes(architectureMarker)) throw new Error('The architecture figure marker is missing.');
+  architectureContent = content.replace(architectureMarker, architecture.html);
+}
 const { title, summary, role, tools, image, imageAlt, imageWidth, imageHeight, caption, demo, sources, evidence } = project.data;
 const shortLabels: Record<string, string> = {
   'problem-and-objective': 'Problem',
@@ -13,6 +23,16 @@ const shortLabels: Record<string, string> = {
   'approaches-we-tried': 'Methods',
   'changes-to-the-diffusion-policy': 'Policy',
   'data-collection-with-dagger': 'DAgger',
+  'what-the-model-actually-is': 'Model scope',
+  'end-to-end-architecture': 'Architecture',
+  'observations-and-state': 'Observations',
+  'visual-features-and-fusion': 'Visual features',
+  'temporal-diffusion-head': 'Diffusion head',
+  'denoising-and-execution': 'Execution',
+  'collection-and-dagger': 'DAgger loop',
+  'expert-and-learner-roles': 'Control and labels',
+  'episodes-and-dataset': 'Dataset',
+  'training-and-evaluation': 'Training',
   'what-i-learned': 'Lessons',
 };
 const sections = [
@@ -40,7 +60,7 @@ const sections = [
             <nav class="links" aria-label="Demonstration source"><a href={demo.sourceUrl} target="_blank" rel="noopener noreferrer">Original recording ↗</a></nav>
           </figure> : image && <figure class="cover"><img src={image} width={imageWidth} height={imageHeight} alt={imageAlt || ''} /><figcaption>{caption}</figcaption></figure>}
         </header>
-        <slot />
+        {architectureContent ? <Fragment set:html={architectureContent} /> : <slot />}
         <section class="panel" aria-labelledby="resources">
           <h2 id="resources" tabindex="-1">Sources and evidence</h2>
           {sources.length ? <nav class="links" aria-label="Project resources">{sources.map(source => <a href={source.url} target={source.url.startsWith('http') ? '_blank' : undefined} rel={source.url.startsWith('http') ? 'noopener noreferrer' : undefined}>{source.label}{source.url.startsWith('http') ? ' ↗' : ''}</a>)}</nav> : <p class="source">{evidence || 'Source: supplied résumé. Public code, challenge evaluation and demonstration links have not been supplied.'}</p>}

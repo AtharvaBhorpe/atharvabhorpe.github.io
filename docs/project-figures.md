@@ -1,55 +1,109 @@
 # Project figures
 
-The homepage contains two static, accessible SVG figures:
+The homepage uses the existing Anatomy SVG style for two robot illustrations.
+These diagrams show simulation concepts, not manufacturer CAD, hardware results or live policy inference.
 
-- Seven-axis Kinova Gen3 with an ESP32 sensor controller.
-- Six-axis UR5 with a held connector and a supported socket.
+## Robot identity and geometry
 
-The figures describe simulation setups. They do not show calibrated hardware, physical validation or live policy inference.
-The Gen3 controller maps MPU6050 inputs to X/Y, the encoder to Z, and the IR sensor to the gripper.
-The UR5 connector remains between both gripper fingers, opposite the fixed socket.
+The sensor project retains the seven-axis **Kinova Gen3**.
+Its MPU6050 commands X/Y motion, its encoder commands Z, and its IR sensor opens or closes the gripper.
 
-## Build and test
+The insertion project uses the six-axis **UR5e**.
+The schematic uses UR5e arm lengths and wrist offsets from the manufacturer's public description.
+Its dimensions are scaled for the illustration, not calibrated for robot control.
 
-`src/data/project-figures.json` contains the approved SVG geometry.
-Normal builds and tests read this file without an Anatomy installation, network access or agent skills.
-`tests/fixtures/preserved-hashes.json` protects its approved bytes.
+An upright NIC card stands on a supported task board and horizontal workbench.
+Two SFP openings face upward from horizontal top brackets.
+The held module aligns above one opening, inserts downward, withdraws vertically and returns above the fixture.
+The NIC card, socket and workbench do not move.
+The module stays between the gripper fingers throughout the cycle.
 
-With the built preview running, run:
+We corrected and captured the static scene before we added motion.
+The separate Kinova project's identity and article were not changed.
+
+## Runtime and accessibility
+
+`src/lib/project-motion.mjs` defines two bounded, 18-second illustrative cycles.
+A fixed-branch two-link solution preserves link lengths. It is not a general inverse-kinematics solver.
+`src/lib/project-scene.mjs` generates both the static fallback and moving SVG paths.
+The client updates existing paths. It does not replace the entire figure or move a rigid arm image.
+
+Each figure has a keyboard- and touch-accessible Play/Pause button.
+Reduced motion starts with a still figure. Play explicitly starts motion under that preference.
+Offscreen figures and hidden documents stop their animation frames.
+Page suspension and component removal cancel callbacks and observers.
+Phase captions are visual labels, not live announcements or measured sensor readings.
+The SVG title and description remain available to screen readers.
+Without JavaScript, the complete still figure and caption remain visible. The inactive button stays hidden.
+
+## Build and checks
 
 ```sh
-SITE_URL=http://127.0.0.1:4336 npm run test:figures
+npm ci --ignore-scripts
+npm run figures:build
+npm run test:motion:model
+npm run check
+npm run build
+npm test
+npm run audit
 ```
 
-The browser test covers joint counts, required parts, finite geometry, accessible descriptions, static behavior, contrast, viewport bounds and compressed size.
-It captures both figures at 320px, 393px and 1440px in both themes, at 1× and 4× resolution.
+The generator checks 37 poses per figure and finds one painter order for the entire bounded cycle.
+Checks cover solid budgets, supports, clearance, housing/link seats, depth order, surface coverage and connector attachment.
+Model tests sample 3,602 poses for rigid lengths, mapped commands, insertion alignment and loop continuity.
+Browser tests cover controls, lifecycle, reduced motion, no-JS fallbacks, clipping and console errors.
+The committed SVG remains the initial image. Tests do not depend on an external toolkit installation.
 
-## Optional regeneration
-
-Regeneration is an authoring operation, not an installation or build step.
-The generator uses the public [Anatomy source](https://github.com/wheresryan22/anatomy/tree/e9488296a44211c42701ff71705b7901470ec78f), revision `e9488296a44211c42701ff71705b7901470ec78f`.
-The [MIT license](../scripts/ANATOMY-LICENSE.txt) identifies its copyright holder.
-No toolkit implementation or private agent code is bundled with this repository.
-
-From the portfolio root, obtain a separate toolkit checkout:
+For focused browser checks against a separate built preview:
 
 ```sh
-git clone https://github.com/wheresryan22/anatomy.git ../anatomy
-git -C ../anatomy checkout --detach e9488296a44211c42701ff71705b7901470ec78f
-ANATOMY_HOME=../anatomy npm run figures:build
+SITE_URL=http://127.0.0.1:4337 npm run test:figures
+SITE_URL=http://127.0.0.1:4337 npm run test:motion
 ```
 
-The generator writes `src/data/project-figures.json`. It audits support, intersections and painter order before it writes the result.
-It also asserts joint counts, finger contact, connector alignment and socket clearance.
-These geometric assertions do not establish physical accuracy.
+Use `EVIDENCE_DIR` to choose the screenshot directory. Do not publish raw captures automatically.
+Browser emulation does not replace physical iPad, iPhone or Safari review.
 
-After a deliberate geometry change, examine the generated diff and browser captures before you update the approved hash fixture.
-Do not update fixtures to conceal an unexplained test failure.
+## Public references and license
 
-## References
+- [Universal Robots ROS2 description](https://github.com/UniversalRobots/Universal_Robots_ROS2_Description): UR5e kinematic dimensions.
+- [Anatomy toolkit revision](https://github.com/wheresryan22/anatomy/tree/e9488296a44211c42701ff71705b7901470ec78f), copyright (c) 2026 Ryan.
+- Bundled toolkit modules: `scripts/anatomy/`.
+- MIT license: `scripts/ANATOMY-LICENSE.txt`.
 
-- [Kinova Gen3 User Guide, R07](https://www.kinovarobotics.com/uploads/User-Guide-Gen3-R07.pdf), printed pages 13 and 61: seven-axis identity and actuator layout.
-- [Universal Robots UR5 technical specification](https://www.universal-robots.com/media/1828033/ur5_tech_spec_web_en.pdf): six-axis UR5 identity.
-- Local project and tutorial content describes the controller inputs, simulated robots and connector-insertion task.
+The drawing modules match that public revision. The bundled audit module retains one tube-sampling adaptation. These figures contain no tubes.
+The original figure geometry and motion retain the toolkit attribution.
+Research material is not included in the website, documentation assets or browser bundles.
 
-The compact geometry is illustrative rather than a dimensional reconstruction of either manufacturer’s robot.
+## Policy architecture figure
+
+The Autonomous Insertion article uses a conventional computational architecture diagram with three flat SVG panels.
+The robot figures, animations, DAgger diagram and surrounding explanation remain unchanged.
+
+- Panel A shows three independent ResNet34 encoders, visual projection, state concatenation and three-observation history.
+- Panel B shows the conditional temporal U-Net, timestep embedding, FiLM conditioning and two skip connections.
+- Panel C shows the DDIM inference loop and eight-action selection from the 32-action prediction.
+
+The two downsampling and two upsampling operations use tapered shapes.
+The last down stage has no additional downsampling. The diagram does not invent a third skip connection.
+Skip features concatenate before the two up stages. The final noise head has no FiLM input.
+Solid, dashed and dotted arrows distinguish signal, conditioning and skip paths.
+Training loss appears separately from the inference flow.
+
+The caption distinguishes configuration dimensions from a verified competition checkpoint.
+A complete HTML equivalent remains visible outside the SVG.
+On narrow screens, each panel scrolls horizontally inside the figure. The page does not overflow.
+The diagram has no client script, animation or custom controls. It works without JavaScript.
+
+```sh
+npm run architecture:build
+npm run build
+SITE_URL=http://127.0.0.1:4337 npm run test:architecture
+```
+
+The generator writes `src/data/policy-architecture.json` without the robot geometry toolkit.
+The Project layout replaces one explicit article marker with trusted, build-time HTML.
+The `--check` option compares the generated artifact with the stored artifact.
+Tests cover tensor metadata, skip destinations, label bounds, local scrolling, accessible descriptions and no-JS behavior.
+The browser matrix covers both themes at five widths. The full `npm test` command includes these tests.
+Physical Safari, iPhone and iPad review remains separate.

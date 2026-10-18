@@ -1,0 +1,12 @@
+/* Existing editorial tokens; diagrams are readable without JavaScript. */
+.technical-flow{margin:2rem 0;padding:1.25rem;background:var(--surface-page);border:1px solid var(--rule-decorative);border-radius:4px}
+.technical-flow .flow-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-bottom:1.5rem}
+.technical-flow .flow-inputs>div,.technical-flow .flow-chain>li{padding:1rem;background:var(--surface-panel);border:1px solid var(--rule-control)}
+.technical-flow strong,.technical-flow span{display:block}
+.technical-flow strong{color:var(--text-primary);font-size:1rem;line-height:1.4}
+.technical-flow span{margin-top:.5rem;font-size:1rem;line-height:1.6}
+.technical-flow .flow-chain{list-style:none;padding:0;margin:0;display:grid;gap:2rem}
+.technical-flow .flow-chain>li{position:relative;margin:0}
+.technical-flow .flow-chain>li+li::before{content:'↓';position:absolute;top:-1.8rem;left:50%;font-size:1.25rem;line-height:1.5;color:var(--text-primary)}
+.technical-flow figcaption,.technical-flow .flow-return{font-size:.9375rem;line-height:1.6;margin:1rem 0 0;color:var(--text-secondary)}
+@media(max-width:500px){.technical-flow{padding:.75rem}.technical-flow .flow-inputs{grid-template-columns:minmax(0,1fr)}.technical-flow .flow-inputs>div,.technical-flow .flow-chain>li{padding:.75rem}}

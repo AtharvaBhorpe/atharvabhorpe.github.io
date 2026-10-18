@@ -27,8 +27,10 @@ if (!before) {
     payloads.push({ kind, bytes, gzip });
   }
   // tests/homepage.cjs protects the approved stylesheet, orbit markup and figure bytes.
-  assert(!readFileSync('src/data/site.ts','utf8').includes('UR5e'));
-  assert(!readFileSync('src/content/projects/autonomous-insertion.md','utf8').includes('UR5e'));
+  for(const file of ['src/data/site.ts','src/content/projects/autonomous-insertion.md','src/components/ProjectAnatomy.astro']) {
+    assert(readFileSync(file,'utf8').includes('UR5e'));
+    assert(!/\bUR5\b/.test(readFileSync(file,'utf8')),'Authoritative UR5e identity');
+  }
 }
 const browser = await chromium.launch({ executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome', headless: true });
 try {
@@ -85,12 +87,12 @@ try {
         contrasts.push({id,width,theme,contrast});
         assert.equal(await svg.evaluate(e => e.getAnimations({subtree:true}).length), 0);
         if (id === 'autonomous-insertion') {
-          assert.match(await record.locator('.facts').textContent(), /simulated UR5 arm/);
-          assert(!/UR5e/.test(await record.textContent()));
+          assert.match(await record.locator('.facts').textContent(), /simulated UR5e arm/);
+          assert(!/\bUR5\b/.test(await record.textContent()));
           const gap = await svg.evaluate(e => {
             const tip=e.querySelector('[data-part="connector.mating-tip"]').getBoundingClientRect();
-            const socket=e.querySelector('[data-part="socket.bottom"]').getBoundingClientRect();
-            return socket.left-tip.right;
+            const socket=e.querySelector('[data-part="socket.front"]').getBoundingClientRect();
+            return socket.top-tip.bottom;
           });
           assert(gap >= 1, 'Connector/socket gap remains legible on phones');
         } else assert.match(await figure.textContent(), /MPU6050: X\/Y · encoder: Z · IR: gripper/);
@@ -104,8 +106,8 @@ try {
     const page = await context.newPage(); await page.goto(origin);
     assert.equal(await page.locator('.project-anatomy').count(),2,'Both complete figures exist without JavaScript');
     await page.goto(`${origin}/projects/autonomous-insertion/`);
-    assert.match(await page.locator('main').textContent(),/simulated UR5 arm/);
-    assert(!/UR5e/.test(await page.locator('main').textContent()));
+    assert.match(await page.locator('main').textContent(),/simulated UR5e arm/);
+    assert(!/\bUR5\b/.test(await page.locator('main').textContent()));
     await context.close();
   }
   assert.deepEqual(errors, []);
