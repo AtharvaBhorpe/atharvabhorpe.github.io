@@ -1,0 +1,25 @@
+.policy-architecture{padding:0;max-width:100%;min-width:0}
+.network-heading{padding:1.25rem;border-bottom:1px solid var(--rule-decorative)}
+.network-heading strong{font-size:1.25rem}
+.policy-architecture :is(.network-scroll-hint,.network-note,.network-training,figcaption){padding:1rem 1.25rem;margin:0;font-size:1rem;line-height:1.65}
+.network-panel-label{padding:.8rem 1.25rem;border-block:1px solid var(--rule-decorative);font-size:1rem;font-weight:600;background:var(--surface-navigation)}
+.network-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:auto}
+.network-scroll:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-3px}
+.network-svg{display:block;width:100%;min-width:860px;height:auto;color:var(--text-primary);font-family:inherit}
+.network-svg [data-node]>:is(rect,path){fill:var(--surface-panel);stroke:var(--text-primary);stroke-width:1.5}
+.network-svg text{fill:var(--text-primary);stroke:none}
+.network-svg .node-title{font-size:20px;font-weight:600}
+.network-svg .node-label,.network-svg .edge-label{font-size:18px}
+.network-edge{fill:none;stroke:var(--text-primary);stroke-width:1.8;stroke-linejoin:round}
+.network-svg marker path{fill:var(--text-primary);stroke:none}
+.network-edge.conditioning{stroke-dasharray:8 5}
+.network-edge.skip{stroke-dasharray:2 4;stroke-width:2}
+.network-legend{display:flex;flex-wrap:wrap;gap:.6rem 1.5rem;padding:0 1.25rem 1rem;font-size:.875rem}
+.network-legend>span{display:flex;align-items:center;gap:.5rem;color:var(--text-primary)}
+.network-legend>.signal::before,.network-legend>.conditioning::before,.network-legend>.skip::before{content:"";width:32px;border-top:2px solid;flex-shrink:0}
+.network-legend>.conditioning::before{border-top-style:dashed}
+.network-legend>.skip::before{border-top-style:dotted}
+.network-equivalent{padding:1rem 1.25rem;border-top:1px solid var(--rule-decorative)}
+.network-equivalent li{font-size:1rem;line-height:1.65;margin-block:.75rem}
+.network-training{border-top:1px solid var(--rule-decorative)}
+@media(max-width:500px){.network-heading,.network-scroll-hint,.network-note,.network-training,.policy-architecture figcaption,.network-panel-label,.network-equivalent{padding-inline:.75rem}.network-legend{padding-inline:.75rem}}

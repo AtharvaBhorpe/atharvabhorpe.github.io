@@ -4,13 +4,22 @@ import '../styles/project-anatomy.css';
 interface Props { kind: 'imu' | 'insertion' }
 const { kind } = Astro.props;
 const figure = figures[kind];
-const title = kind === 'imu' ? 'Seven-axis Kinova Gen3 and sensor controller' : 'Six-axis UR5 holding a connector opposite a fixed socket';
+const title = kind === 'imu' ? 'Seven-axis Kinova Gen3 and sensor controller' : 'Six-axis UR5e holding an SFP module above an upward-facing port';
 const description = kind === 'imu'
   ? 'Illustrative sensor layout beside a simulated Kinova Gen3. The ESP32 controller carries an MPU6050 for X/Y end-effector commands, a rotary encoder for Z, and an IR sensor for the gripper. WiFi and micro-ROS feed ROS 2 and MoveIt. Not live hardware or calibrated geometry.'
-  : 'Illustrative simulation setup. A six-axis UR5 holds a fiber-optic connector between its gripper fingers, aligned with a socket on a fixed, supported network-board fixture. The connector remains attached to the gripper. No policy inference or physical robot execution is shown.';
+  : 'Illustrative simulation setup. A six-axis UR5e holds an SFP module pointing downward above a fixed port. Two upward-facing SFP openings sit on the horizontal top of an upright NIC card, supported by the task board and workbench. The module remains between the gripper fingers. This is not policy inference or physical robot execution.';
 ---
+<project-robot data-kind={kind}>
 <svg class="project-anatomy" data-project-figure={kind} data-solids={figure.solids} data-joints={figure.joints} viewBox="0 0 480 400" role="img" aria-labelledby={`${kind}-figure-title ${kind}-figure-description`}>
   <title id={`${kind}-figure-title`}>{title}</title>
   <desc id={`${kind}-figure-description`}>{description}</desc>
   <g set:html={figure.svg} />
 </svg>
+<div class="project-motion-controls">
+  <span data-motion-phase aria-hidden="true">{kind === 'imu' ? 'Ready for sensor commands' : 'Aligned above port'}</span>
+  <button type="button" hidden aria-label={`Play ${kind === 'imu' ? 'Kinova Gen3' : 'UR5e'} motion`}>Play</button>
+</div>
+</project-robot>
+<script>
+  import '../lib/project-motion-client';
+</script>

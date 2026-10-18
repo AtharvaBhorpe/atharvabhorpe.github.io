@@ -9,9 +9,13 @@
     "preview": "astro preview --host 127.0.0.1",
     "check": "astro check",
     "audit": "node tests/audit.cjs",
-    "test": "node tests/portfolio.cjs",
+    "test": "node tests/insertion-article.mjs && node tests/project-motion-model.mjs && node scripts/build-policy-architecture.mjs --check && node tests/portfolio.cjs",
     "figures:build": "node scripts/build-project-figures.mjs --audit",
-    "test:figures": "node tests/project-figures.mjs"
+    "test:figures": "node tests/project-figures.mjs",
+    "test:motion:model": "node tests/project-motion-model.mjs",
+    "test:motion": "node tests/project-motion.mjs",
+    "architecture:build": "node scripts/build-policy-architecture.mjs",
+    "test:architecture": "node scripts/build-policy-architecture.mjs --check && node tests/policy-architecture.mjs"
   },
   "dependencies": { "astro": "7.3.5" },
   "devDependencies": { "@astrojs/check": "0.9.10", "typescript": "5.9.3", "playwright": "1.63.0" }

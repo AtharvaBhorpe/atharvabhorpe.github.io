@@ -22,9 +22,10 @@ The browser regression uses isolated Chromium pages and closes its temporary for
 If Chrome uses a different path, set `CHROME_BIN` before the test. The default is `/usr/bin/google-chrome`.
 Set `EVIDENCE_DIR` to choose the local screenshot directory. Raw captures remain local and ignored.
 Approved regression fixtures live in `tests/fixtures/`. Tests do not read local research archives or agent skills.
-Reviewed PR images live in `docs/pr/editorial-portfolio/`. Neither the fixtures nor these images enter the site build.
+Reviewed PR images live in `docs/pr/editorial-portfolio/` and `docs/pr/intrinsic-dagger-motion/`.
+Neither the fixtures nor these images enter the site build.
 
-`npm test` includes the homepage, bottom navigation and same-page name-link regressions.
+`npm test` includes the model, article, robot motion, homepage, bottom navigation and same-page name-link regressions.
 With a built preview running, run the focused figure and circular-navigation tests:
 
 ```sh
@@ -32,8 +33,9 @@ SITE_URL=http://127.0.0.1:4336 npm run test:figures
 SITE_URL=http://127.0.0.1:4336 node tests/visuals.mjs
 ```
 
-[Project figure documentation](docs/project-figures.md) describes the optional geometry generator and its public source dependency.
-Normal installation, builds and tests use committed SVG data. They do not require the generator.
+[Project figure documentation](docs/project-figures.md) describes the shared geometry, motion and audited static fallbacks.
+The small drawing toolkit is bundled with its MIT license. Builds and tests do not require an external skill checkout.
+Run `npm run figures:build` after geometry changes. Run `npm run test:motion:model` for the standalone geometry checks.
 
 ## Deployment
 
@@ -68,7 +70,7 @@ The writing index includes all nine published local articles and the existing si
 follow their parent tutorial in its documented step order. Other articles remain accessible through the same index.
 The SO-ARM101 video is an existing external link, not IMU-project evidence.
 Insertion and IMU photographs and recordings remain content gaps.
-Their static diagrams describe simulation concepts, not measured results, live policy inference or manufacturer CAD.
+Their optional animated diagrams describe simulation concepts, not measured results, live policy inference or manufacturer CAD.
 No local article text or route is published without real source content.
 
 If a recording uses non-square pixels, use its display aspect ratio for its poster and reserved dimensions.
@@ -80,7 +82,8 @@ The homepage starts with Atharva’s name, role, biography and original portrait
 View projects, Resume and Contact follow the introduction. Resume and Contact stay adjacent on phones.
 Projects, Areas of work, Writing and Contact follow the opening section. The circular navigation links to four project records.
 The portrait sits beside the introduction on wider screens and below it on phones.
-Project and article routes retain their original content, apart from the corrected UR5 model name.
+The insertion article adds the vision-conditioned Diffusion Policy architecture, training workflow and corrected UR5e identity.
+Other project and article routes retain their original content.
 
 Wide screens with a fine pointer retain desktop navigation.
 Phones, touch tablets and screens below 1200px use a bottom dock with an upward-opening menu.

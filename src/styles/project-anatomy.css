@@ -20,3 +20,11 @@
 .project-anatomy .iso-line[data-tone="mid"]{stroke:var(--anatomy-mid)}
 .project-anatomy .iso-line[data-tone="faint"]{stroke:var(--anatomy-faint)}
 .project-figure-note{display:block;margin-top:6px;font-size:13px;line-height:1.5}
+project-robot{display:block;width:100%}
+.project-motion-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin-top:8px;color:var(--text-secondary);font-size:13px;line-height:1.5;text-align:left}
+.project-motion-controls button{flex-shrink:0;min-width:64px;min-height:44px;padding:8px 12px;border:1px solid var(--rule-control);border-radius:4px;background:var(--surface-panel);color:var(--text-primary);font:inherit;cursor:pointer}
+.project-motion-controls button:hover{background:var(--surface-hover)}
+.project-motion-controls button:active{transform:scale(.97)}
+.project-motion-controls button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}
+.project-motion-controls button:disabled{cursor:default;color:var(--text-secondary)}
+.project-anatomy .is-command .iso-edge{stroke:var(--text-primary);stroke-width:1.5px}

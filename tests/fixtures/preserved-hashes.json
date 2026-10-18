@@ -1,6 +1,6 @@
 {
   "package-lock.json": "e6bef365d9238af572541153c19ef0af63b4291b938f5712256163487c99e9a5",
-  "package.json": "4c57b8cc463cc79ef2c70f2552b7c675ab98d8d5d5a2bbcae1d3a0c10051c5c2",
+  "package.json": "de47fcadc88f614a6b87d738266630fbe3b1fd48bc60ec15ac1943cc03b28ad9",
   "public/downloads/microros/MICROROS_SETUP_INSTRUCTIONS_HUMBLE.md": "d9fffa8a5f7083e6915ab57fdc7a6325a51e5d215a06a9917c4edb8be20ff7b2",
   "public/downloads/microros/microros_esp32_sensors_humble.ino": "bf1d4ab6064c96e00c25f27cfb722fefab52618ccca7185dd67736aeb1858074",
   "public/downloads/microros/setup_microros_workspace_humble.sh": "d5d54e21916b4b787c196ee2a20c737ef815778ad0c9ed7f3f30c7e999c7a22d",
@@ -38,8 +38,8 @@
   "public/theme.js": "b99610d2b0e8faa40e91d249e66bd61728c190b4366681a178722bd27ed7db37",
   "public/ui.js": "5c9527fbb33356cae38f91cd0313cbd30fbf45c3dfb3ff7d244ca5aab19465cd",
   "src/components/Navigation.astro": "a1b4ea6ec3beb48e81bf6621f4562cce4f37c48249286d5fda159d2466b36b5c",
-  "src/components/ProjectAnatomy.astro": "5321c570eba21c2b1a17f34ef72ec2170c1577a212b92d1f5cafbd3b54a6eac4",
-  "src/content/projects/autonomous-insertion.md": "c6e2bfa355397b824ca97178d1592cca5e33ae22188e05c58cb02863b6c70322",
+  "src/components/ProjectAnatomy.astro": "898168728e1f307bf887214a24283e1af9d3cb6e73c521aa5bab895a3cf96d62",
+  "src/content/projects/autonomous-insertion.md": "f6f6a9098fe02a8cb5b5b887ed08c313104003c0d53ed256fe907d0834ff4347",
   "src/content/projects/cost-effective-amr.md": "405e00cfdc8d9b2806c9c0292e2ce3402a724c1a5a1edea4d6b6687917fb27f0",
   "src/content/projects/imu-controlled-arm.md": "9513ef945ed631a87d087d60b7f6ccfc61afdd26d885415cd377f127295a3043",
   "src/content/projects/tiny-recursive-model.md": "6bf8acd5ba3ce328a730f19fedb79d9ee3cfe454e1266d6a709dd7187464d34a",
@@ -52,10 +52,10 @@
   "src/content/writing/so-arm-moveit-setup.md": "7332bce1ebced8e08dab0dd2b99039aa8f32cb67244e9c6d85eb89565c6627b3",
   "src/content/writing/so-arm100101-lerobot-isaac-sim.md": "482b01bdeb49eb220b35be2840b2c37e00807c1e2c69404c632384c1a6311115",
   "src/content/writing/teaching-a-tiny-recursive-model-to-plan-paths.md": "0fa55122ffb016f867e62e426da78612da43ffb8d5abc9838d23a043d880631d",
-  "src/data/project-figures.json": "32b3dcbd7a3a998a95724576321f4b79525048e6e786cbf28c6b5d4a25c03cbb",
+  "src/data/project-figures.json": "6dbd97f3f70f2e0f1c1d01a695ae5ab5607a61c17e2d8481d3a2c8fdb9d0cf75",
   "src/layouts/Base.astro": "d9ae81acc61f25ea1e95eaa45256f478a260b903be69c1711bf4e1ee3f273ce6",
   "src/styles/detail.css": "fb018bb9a4df0d284d0a03e1e65618d76669c5a37510507a09595caa29b1522e",
   "src/styles/production.css": "407e5f36d125d7d40fab6b8efc6fe1dfc24e2fa99f1acfc742c6d75d36c8dc64",
-  "src/styles/project-anatomy.css": "f26c8b0ba76bd1aaff1953a6c4c968f8c8e41cbdec24477c8d84dbb3b8d49c34",
+  "src/styles/project-anatomy.css": "e10deba0955c74451416192133590976129740674d65a878f1022e67be0f2b79",
   "tests/navigation.cjs": "e642168acfd9a95e5e4dc95e5e8cad2319e6f294a565953cddb0b8518f3c16a6"
 }
