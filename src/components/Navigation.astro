@@ -13,11 +13,13 @@ const { detail = false, contents = false, sections, backHref = '/#projects', bac
 ---
 <aside class:list={['site-navigation', detail ? 'detail-sidebar' : 'rail']} aria-label="Portfolio navigation">
   <div class="identity-row">
-    <a class="name home-link" href="/#home">Atharva Bhorpe</a>
+    <a class="name home-link" href={detail ? '/#home' : '#home'}>Atharva Bhorpe</a>
+    {detail && <nav class="masthead-links" aria-label="Portfolio"><a href="/#projects">Projects</a><a href="/writing/">Writing</a><a href="/#contact">Contact</a></nav>}
     <div class="identity-actions"><Theme /><button class="menu-toggle" type="button" aria-controls="navigation-panel" aria-expanded="false" hidden>Menu</button></div>
   </div>
   <div id="navigation-panel" class="navigation-panel">
     {detail && <a class="back" href={backHref}>← Back to {backLabel}</a>}
+    {detail && <p class="navigation-caption">{contents ? 'In this article' : 'On this page'}</p>}
     <nav class="sections" aria-label={contents ? 'Article contents' : detail ? 'On this page' : 'Sections'}>
       {sections.map(section => <a href={`#${section.id}`} data-section={section.id} class={section.depth === 3 ? 'subsection' : undefined}>{section.label}</a>)}
     </nav>

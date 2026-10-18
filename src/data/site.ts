@@ -13,8 +13,8 @@ export const homeSections = [
 ];
 
 export const homeProjects = [
-  { id: 'tiny-recursive-model', title: 'Tiny Recursive Model for Path Planning', objective: 'Learn navigation on occupancy grids.', contribution: 'Model development and evaluation.', scope: 'Approximately 1.2M parameters; reported grid evaluations, not physical-robot validation.' },
-  { id: 'cost-effective-amr', title: 'RBot: a cost-effective AMR', objective: 'Build an affordable ROS mobile robot.', contribution: 'Connect the ROS stack to Arduino firmware on ESP32 in a student team.', scope: 'A documented prototype, not a production deployment.' },
-  { id: 'autonomous-insertion', title: 'Autonomous Insertion Challenge', objective: 'Learn connector insertion with a simulated UR5e arm.', contribution: 'Policy tuning and data collection in a team.', scope: 'Simulation results.' },
-  { id: 'imu-controlled-arm', title: 'IMU-controlled Robotic Arm', objective: 'Control a simulated Kinova arm with sensor inputs.', contribution: 'Integrate IMU, encoder and IR inputs with robot control.', scope: 'A working simulation pipeline without published accuracy or latency measurements.' },
+  { id: 'tiny-recursive-model', title: 'Tiny Recursive Model for Path Planning', objective: 'I built a recursive transformer for occupancy-grid path planning.', contribution: 'I evaluated path success, route optimality and latency against A* and parameter-matched CNNs.', scope: 'Approximately 1.2M parameters. Grid evaluations, not physical-robot tests.' },
+  { id: 'cost-effective-amr', title: 'RBot: a cost-effective AMR', objective: 'Our five-student team built an affordable ROS mobile-robot prototype.', contribution: 'I integrated the ROS stack with Arduino firmware on an ESP32.', scope: 'Laptop-based student prototype for robotics education and research.' },
+  { id: 'autonomous-insertion', title: 'Autonomous Insertion Challenge', objective: 'Our team trained imitation-learning policies for connector insertion with a simulated UR5 arm.', contribution: 'I focused on policy tuning and data collection.', scope: 'Gazebo simulation with SFP and SC fiber-optic plugs.' },
+  { id: 'imu-controlled-arm', title: 'IMU-controlled Robotic Arm', objective: 'I built a sensor-based controller for a simulated Kinova Gen3 arm.', contribution: 'I connected IMU, rotary encoder and IR inputs to ROS 2 and MoveIt through an ESP32.', scope: 'Sensor-to-simulation control over WiFi and micro-ROS.' },
 ];

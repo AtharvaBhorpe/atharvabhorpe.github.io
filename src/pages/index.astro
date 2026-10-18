@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import Navigation from '../components/Navigation.astro';
 import Contact from '../components/Contact.astro';
 import WritingList from '../components/WritingList.astro';
+import ProjectAnatomy from '../components/ProjectAnatomy.astro';
 import { getCollection } from 'astro:content';
 import { homeSections, homeProjects } from '../data/site';
 import '../styles/home.css';
@@ -14,34 +15,55 @@ const projects = await getCollection('projects');
       <Navigation sections={homeSections} />
       <main class="content" id="main-content">
         <section class="hero" id="home" tabindex="-1" aria-labelledby="intro-heading">
-          <div class="hero-portrait" id="about" tabindex="-1"><img data-hero="media" src="/images/portrait.png" width="1254" height="1254" alt="Portrait of Atharva Bhorpe" fetchpriority="high" /></div>
-          <div class="hero-copy" data-hero="intro">
-            <h1 id="intro-heading">I build learning-based robotic systems.</h1>
-            <p>I’m Atharva Bhorpe, a robotics master’s student at RWTH Aachen with a background in mechanical engineering and industrial automation.</p>
-            <div class="hero-actions"><a class="action" href="#projects">Explore projects <span class="arrow" aria-hidden="true">↓</span></a><a class="secondary-action" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume <span class="arrow" aria-hidden="true">↗</span></a></div>
+          <div class="hero-copy" id="about" tabindex="-1" data-hero="intro">
+            <h1 id="intro-heading">Atharva Bhorpe</h1>
+            <p class="hero-role">Robotics master’s student at RWTH Aachen</p>
+            <p class="hero-introduction">I work on robot learning, control, and simulation. My background is in mechanical engineering and industrial automation.</p>
+            <div class="hero-actions"><a class="action" href="#projects">View projects <span class="arrow" aria-hidden="true">↓</span></a><div class="hero-secondary-actions"><a class="secondary-action" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume <span class="arrow" aria-hidden="true">↗</span></a><a class="secondary-action" href="#contact">Contact <span class="arrow" aria-hidden="true">↓</span></a></div></div>
           </div>
+          <div class="hero-portrait"><img data-hero="media" src="/images/portrait.png" width="1254" height="1254" alt="Portrait of Atharva Bhorpe" fetchpriority="high" /></div>
         </section>
         <section class="projects" id="projects" tabindex="-1" aria-labelledby="projects-heading">
-          <h2 id="projects-heading">Selected projects</h2>
+          <div class="section-heading"><h2 id="projects-heading">Projects</h2></div>
           {homeProjects.map(p => {
             const project = projects.find(project => project.id === p.id);
             if (!project) throw new Error(`Missing project: ${p.id}`);
-            return <article class:list={['project-record', { 'project-with-media': p.id === 'tiny-recursive-model' || p.id === 'cost-effective-amr' }]} aria-labelledby={`title-${p.id}`}>
-              <h3 id={`title-${p.id}`}>{p.title}</h3>
+            return <article id={`work-${p.id}`} class:list={['project-record', { 'project-with-media': p.id === 'tiny-recursive-model' || p.id === 'cost-effective-amr' }]} aria-labelledby={`title-${p.id}`}>
+              <div class="project-heading"><p class="project-category">{p.id === 'tiny-recursive-model' ? 'Learning / Navigation' : p.id === 'cost-effective-amr' ? 'Hardware / ROS' : p.id === 'autonomous-insertion' ? 'Simulation / Manipulation' : 'Sensing / Control'}</p><h3 id={`title-${p.id}`}>{p.title}</h3></div>
+              {p.id === 'autonomous-insertion' && <figure class="project-drawing"><ProjectAnatomy kind="insertion" /><figcaption>Learning in simulation<span class="project-figure-note">Six-axis UR5 · held connector · fixed socket.<br />Illustrative setup, not policy execution.</span></figcaption></figure>}
+              {p.id === 'imu-controlled-arm' && <figure class="project-drawing"><ProjectAnatomy kind="imu" /><figcaption>From sensor input to robot motion<span class="project-figure-note">MPU6050: X/Y · encoder: Z · IR: gripper.<br />Illustrative controller → simulated seven-axis Gen3.</span></figcaption></figure>}
               {p.id === 'tiny-recursive-model' && <figure class="project-media lead-figure">
                 <div class="lead-frame"><video controls playsinline preload="metadata" poster="/images/trm-demo-poster.jpg" width="1920" height="1200" aria-label="Tiny Recursive Model path-planning demonstration" aria-describedby="demo-caption"><source src="/media/trm-training-and-path-demo.mp4" type="video/mp4" /><a href="/media/trm-training-and-path-demo.mp4">Open the recording</a></video></div>
-                <figcaption id="demo-caption">Recorded tutorial demonstration; evaluation not independently reproduced.</figcaption>
+                <figcaption id="demo-caption">Recorded tutorial: training metrics and predicted and ground-truth paths on an occupancy grid.</figcaption>
               </figure>}
               {p.id === 'cost-effective-amr' && <figure class="project-media rbot-figure"><div class="rbot-frame"><img data-reveal="slide" data-duration="620" src="/images/amr-prototypes.png" width="675" height="520" alt="RBot initial prototype, rocker mechanism and final prototype" loading="lazy" /></div><figcaption data-reveal="fade" data-delay="80">Initial prototype, rocker mechanism and final RBot prototype.</figcaption></figure>}
               <div class="project-copy" data-reveal="fade" data-duration="480">
-                <dl class="facts"><dt>Objective</dt><dd>{p.objective}</dd><dt>My contribution</dt><dd>{p.contribution}</dd><dt>Tools</dt><dd>{project.data.tools}</dd><dt>Scope</dt><dd>{p.scope}</dd></dl>
+                <dl class="facts"><dt>What I built</dt><dd>{p.objective}</dd><dt>My contribution</dt><dd>{p.contribution}</dd><dt>Tools</dt><dd>{project.data.tools}</dd><dt>Scope</dt><dd>{p.scope}</dd></dl>
                 <a class="secondary-action project-link" href={`/projects/${p.id}/`} aria-label={`View project: ${p.title}`}>View project <span class="arrow" aria-hidden="true">↗</span></a>
               </div>
             </article>;
           })}
         </section>
+        <section class="connections" aria-labelledby="connections-heading">
+          <div class="connections-intro"><h2 id="connections-heading">Areas I work in</h2><p>My projects connect robot learning, mechanical systems, simulation, and sensor-based control.</p></div>
+          <nav class="practice-orbit" id="practice-orbit" aria-label="Explore projects by discipline">
+            <svg viewBox="0 0 500 500" fill="none" aria-hidden="true">
+              <path class="orbit-segment orbit-segment-learn iso-line" d="M108.579 108.579A200 200 0 0 1 391.421 108.579" />
+              <path class="orbit-segment orbit-segment-build iso-line" d="M391.421 108.579A200 200 0 0 1 391.421 391.421" />
+              <path class="orbit-segment orbit-segment-simulate iso-line" d="M391.421 391.421A200 200 0 0 1 108.579 391.421" />
+              <path class="orbit-segment orbit-segment-connect iso-line" d="M108.579 391.421A200 200 0 0 1 108.579 108.579" />
+              <circle class="orbit-hub" cx="250" cy="250" r="60" /><circle class="orbit-hub" cx="250" cy="250" r="45" /><circle class="orbit-hub" cx="250" cy="250" r="30" />
+              <path class="orbit-spokes iso-line" d="M250 190v30m30 30h30m-60 30v30m-60-60h30" />
+              <g class="orbit-junctions"><circle cx="108.579" cy="108.579" r="2.5" /><circle cx="391.421" cy="108.579" r="2.5" /><circle cx="391.421" cy="391.421" r="2.5" /><circle cx="108.579" cy="391.421" r="2.5" /></g>
+            </svg>
+            <a class="orbit-learn" href="#work-tiny-recursive-model">Learn <span>Path planning</span></a>
+            <a class="orbit-build" href="#work-cost-effective-amr">Build <span>Mobile robots</span></a>
+            <a class="orbit-simulate" href="#work-autonomous-insertion">Simulate <span>Manipulation</span></a>
+            <a class="orbit-connect" href="#work-imu-controlled-arm">Connect <span>Sensor inputs</span></a>
+          </nav>
+        </section>
         <section class="writing" id="writing" tabindex="-1" aria-labelledby="writing-heading">
-          <h2 id="writing-heading">Writing & tutorials</h2>
+          <div class="section-heading"><h2 id="writing-heading">Writing</h2><p>I document the tools, setups, and experiments behind my projects.</p></div>
           <WritingList featured />
         </section>
         <Contact footer />
