@@ -6,8 +6,8 @@
     const ids = [...new Set(links.map(link => link.dataset.section))].filter(id => document.getElementById(id));
     const key = 'portfolio-scroll:' + location.pathname;
     const fragment = hash => { try { return decodeURIComponent(hash.slice(1)); } catch { return ''; } };
-    const clearance = () => innerWidth < 1200 ? document.querySelector('.identity-row').getBoundingClientRect().height + 8 : 32;
-    const top = () => clearance();
+    // Native fragments, keyboard scrolling and scripted anchors share the same clearance.
+    const top = () => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
     function current() {
       let selected = ids[0];
       for (const id of ids) if (document.getElementById(id).getBoundingClientRect().top <= top() + 40) selected = id;

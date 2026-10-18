@@ -1,8 +1,8 @@
 # Atharva Bhorpe portfolio
 
 Static Astro portfolio at https://atharvabhorpe.github.io/.
-The approved Cabinet Grotesk/Satoshi typography and light/dark palette remain the design baseline.
-The `design/modern-portfolio` branch implements one supplied design direction. The earlier request for three alternatives remains outside this delivery.
+The editorial design uses a monochrome light/dark palette, serif headings and Satoshi body text.
+The original fonts, portrait, project media, downloads and résumé retain their approved bytes.
 
 ## Development and checks
 
@@ -20,7 +20,20 @@ npm run dev
 
 The browser regression uses isolated Chromium pages and closes its temporary foreground preview and browser.
 If Chrome uses a different path, set `CHROME_BIN` before the test. The default is `/usr/bin/google-chrome`.
-Set `EVIDENCE_DIR` to choose the local screenshot directory. Evidence is not a repository or deployment asset.
+Set `EVIDENCE_DIR` to choose the local screenshot directory. Raw captures remain local and ignored.
+Approved regression fixtures live in `tests/fixtures/`. Tests do not read local research archives or agent skills.
+Reviewed PR images live in `docs/pr/editorial-portfolio/`. Neither the fixtures nor these images enter the site build.
+
+`npm test` includes the homepage, bottom navigation and same-page name-link regressions.
+With a built preview running, run the focused figure and circular-navigation tests:
+
+```sh
+SITE_URL=http://127.0.0.1:4336 npm run test:figures
+SITE_URL=http://127.0.0.1:4336 node tests/visuals.mjs
+```
+
+[Project figure documentation](docs/project-figures.md) describes the optional geometry generator and its public source dependency.
+Normal installation, builds and tests use committed SVG data. They do not require the generator.
 
 ## Deployment
 
@@ -32,7 +45,7 @@ No custom domain, backend or authentication is configured.
 For a local built preview:
 
 ```sh
-npm run preview -- --port 4321
+npm run preview -- --port 4336
 ```
 
 Do not serve the workspace directory publicly.
@@ -52,9 +65,10 @@ The TRM video is a real silent recording. It has native controls and does not au
 The homepage opens with Atharva’s portrait and introduction, then presents four complete project records and three featured tutorials.
 Each project owns its heading, media where available, objective, contribution, tools, scope and case-study link.
 The writing index includes all nine published local articles and the existing simulation video. Companion guides
-follow their parent tutorial in its documented step order; other articles remain accessible through the same index.
+follow their parent tutorial in its documented step order. Other articles remain accessible through the same index.
 The SO-ARM101 video is an existing external link, not IMU-project evidence.
-Insertion and IMU demonstration media remain optional content gaps. The site does not invent visuals.
+Insertion and IMU photographs and recordings remain content gaps.
+Their static diagrams describe simulation concepts, not measured results, live policy inference or manufacturer CAD.
 No local article text or route is published without real source content.
 
 If a recording uses non-square pixels, use its display aspect ratio for its poster and reserved dimensions.
@@ -62,24 +76,28 @@ Project sections use `<section class="panel prose">`. Navigation comes from actu
 
 ## Design implementation
 
-The October 15 remediation prioritizes a clear reading sequence after the earlier composition was rejected:
-portrait and introduction, selected projects, tutorials and contact. The existing fonts, palette, routes and real
-project materials remain the baseline. The sidebar stays sticky on desktop; smaller screens use the Menu disclosure.
-The opening portrait sits beside the introduction on wider screens and above it on mobile. Tutorials occupy
-separate columns or a compact stack. The former lower biography is folded into the opening introduction.
-Project and article routes retain their original Markdown.
+The homepage starts with Atharva’s name, role, biography and original portrait.
+View projects, Resume and Contact follow the introduction. Resume and Contact stay adjacent on phones.
+Projects, Areas of work, Writing and Contact follow the opening section. The circular navigation links to four project records.
+The portrait sits beside the introduction on wider screens and below it on phones.
+Project and article routes retain their original content, apart from the corrected UR5 model name.
 
-The theme icon sits to the right of the name in the desktop rail and beside Menu in the compact header.
+Wide screens with a fine pointer retain desktop navigation.
+Phones, touch tablets and screens below 1200px use a bottom dock with an upward-opening menu.
+The theme icon stays beside the persistent name link and the compact Menu control.
 It cycles Light → Dark → System, defaults to System for new visitors, and retains URL/storage preferences.
-Sun, moon and monitor icons show the chosen mode; tooltips, accessible names and status feedback describe it.
+Sun, moon and monitor icons show the chosen mode. Tooltips, accessible names and status feedback describe it.
 
 All routes use native document scrolling. Section navigation preserves browser Back/Forward, focus targets and
-header clearance. The menu makes covered content inert while open and restores it on close. Technical media uses
-contain sizing; the RBot image stays at or below 675 CSS pixels. Projects without photographs remain text records.
-No fictional projects, affiliations, measured outcomes or replacement hardware imagery were added.
+navigation clearance. The homepage name link reuses the shared smooth-scroll handler and respects reduced motion.
+Other routes retain normal navigation home. The menu makes covered content inert while open and restores it on close.
+Responsive mode changes transfer focus before they hide controls.
+Technical media uses contain sizing. The RBot image stays at or below 675 CSS pixels.
+The two schematic robot figures identify their illustrative scope. They do not replace hardware evidence.
+The design adds no fictional projects, affiliations or measured outcomes.
 
 `public/motion.js` owns the hero entrance and once-only project/writing reveals. Only offscreen leaf groups are
-prepared; restored content, rapid scrolling, resizing and reduced-motion changes finish those owned effects.
+prepared. Restored content, rapid scrolling, resizing and reduced-motion changes finish those owned effects.
 CSS remains visible without JavaScript. Browser regressions cover all published article links, complete project
 groups, non-overlapping tutorials, keyboard focus, clipboard fallbacks, font loading and native media playback.
 The suite checks 15 routes, widths from 320 to 1505px in both themes, a 200% zoom equivalent, two rapid scroll

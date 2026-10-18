@@ -5,11 +5,11 @@ import WritingList from '../../components/WritingList.astro';
 import '../../styles/detail.css';
 ---
 <Base title="Writing" description="Robotics tutorials, project notes, and videos by Atharva Bhorpe.">
-  <div class="detail-shell">
+  <div class="detail-shell writing-index">
     <div class="detail-layout">
       <Navigation detail sections={[{id:'overview',label:'Overview'}]} backHref="/#writing" backLabel="Portfolio" />
       <main class="case-study" id="main-content">
-        <header class="panel"><p class="eyebrow">Atharva Bhorpe · Writing</p><h1 id="overview" tabindex="-1">Writing</h1><p class="summary">Robotics tutorials, project notes, and videos.</p></header>
+        <header class="panel"><p class="eyebrow">Atharva Bhorpe · Writing</p><h1 id="overview" tabindex="-1">Writing</h1><p class="summary">Robotics, written down. Tutorials, project notes, and videos from learning to build.</p></header>
         <section class="panel" aria-label="Articles and videos">
           <WritingList />
         </section>

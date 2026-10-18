@@ -6,8 +6,7 @@ const { footer = false } = Astro.props;
 {footer ? <footer class="contact-section" id="contact" tabindex="-1" aria-labelledby="contact-heading">
   <div class="contact-panel">
     <div class="contact-introduction">
-      <p class="contact-name">Atharva Bhorpe</p>
-      <h2 id="contact-heading">Get in touch.</h2>
+      <h2 id="contact-heading">Contact</h2>
       <p>For robotics work, research or a technical conversation.</p>
       <div class="copy-scope">
         <div class="email-control"><span id="contact_email">{profile.email}</span><button class="copy-email" type="button" data-email={profile.email} aria-describedby="contact_email">Copy email</button></div>
@@ -19,6 +18,7 @@ const { footer = false } = Astro.props;
     <nav class="footer-links" aria-label="Profiles"><h3>Profiles</h3><a class="resume-link" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume</a><a href={profile.github} target="_blank" rel="noopener noreferrer">GitHub</a><a href={profile.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a></nav>
     <div class="footer-contact"><h3>Contact</h3><p>Aachen, Germany</p><a class="secondary-action" href={`mailto:${profile.email}`}>Email Atharva <span class="arrow" aria-hidden="true">↗</span></a></div>
   </div>
+  <div class="footer-signature"><p>Atharva Bhorpe</p><a href="#home">Back to top ↑</a></div>
 </footer> : <div class="copy-scope contact-resources" role="group" aria-label="Resources and contact">
   <a class="resume-link" href="/resume.pdf" target="_blank" rel="noopener noreferrer">Resume</a>
   <a href={profile.github} target="_blank" rel="noopener noreferrer">GitHub</a>

@@ -1,6 +1,6 @@
 ---
 title: Autonomous Insertion Challenge
-summary: I worked with a team to train imitation-learning policies for fiber-optic connector insertion with a simulated UR5e arm.
+summary: I worked with a team to train imitation-learning policies for fiber-optic connector insertion with a simulated UR5 arm.
 order: 2
 objective: Learn robotic connector insertion.
 outcome: '86/100 SFP score · policy tuning in a team.'
@@ -12,7 +12,7 @@ evidence: These results describe our work in simulation. They do not establish p
 
 ## Problem and objective
 
-Our goal was to insert SFP and SC fiber-optic plugs into a network board. We used a simulated UR5e arm with a Robotiq gripper in Gazebo.
+Our goal was to insert SFP and SC fiber-optic plugs into a network board. We used a simulated UR5 arm with a Robotiq gripper in Gazebo.
 
 The challenge allowed three trials of 180 seconds each, with 300 points available in total.
 

@@ -26,14 +26,15 @@ const approvedAssets = {
 };
 for (const [file,hash] of Object.entries(approvedAssets)) assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,'public',file))).digest('hex'), hash, file);
 const css = fs.readFileSync(path.join(root,'src/styles/theme.css'),'utf8');
-const approvedPalette = { light:'badddcf3ce049e80ab64a67c8fd4330066a6cf947e07ca3cd316b05681354798', dark:'8dfe6db750f7b8193d42a987fc216cbfee47581a75ae7837a8f7f3dd179c2ada' };
+// This independent option intentionally changes the palette, not the contrast floor.
+const approvedPalette = { light:'#F2F2EE', dark:'#1C1D1B' };
 const luminance = hex => hex.match(/[a-f\d]{2}/gi).map(s=>parseInt(s,16)/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);
 const contrasts = [];
 for (const mode of ['light','dark']) {
   const pattern = new RegExp(':root\\[data-resolved="'+mode+'"\\]\\{([^}]*)\\}');
   const block = css.match(pattern)[1];
-  assert.equal(createHash('sha256').update(block).digest('hex'), approvedPalette[mode], 'Approved palette is unchanged');
   const tokens = Object.fromEntries([...block.matchAll(/--([\w-]+):(#\w{6})/g)].map(m=>[m[1],m[2]]));
+  assert.equal(tokens['surface-page'], approvedPalette[mode], 'Editorial paper is intentional');
   const pairs = [['selection-text','selection-bg',4.5],['button-text','button-bg',4.5],['link-text','surface-panel',4.5],['focus-selected','selection-bg',3]];
   for (const surface of ['surface-page','surface-panel','surface-navigation','surface-hover','surface-input']) pairs.push(['text-primary',surface,4.5],['text-secondary',surface,4.5],['link-text',surface,4.5],['focus-ring',surface,3],['rule-control',surface,3]);
   for (const [foreground,background,minimum] of pairs) {
@@ -43,6 +44,7 @@ for (const mode of ['light','dark']) {
 }
 const articles = fs.readdirSync(path.join(root,'dist/writing')).filter(id=>fs.statSync(path.join(root,'dist/writing',id)).isDirectory()).map(id=>`/writing/${id}/`);
 const allRoutes = [...pages,'/writing/',...articles];
+assert.equal(allRoutes.length, 15, 'All original routes remain');
 const report = {routes:[],responsive:[],motion:[],contrasts,limitations:['Physical Safari/iOS and native touch are not emulated by desktop Chromium.']};
 const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
 (async () => {
@@ -71,7 +73,7 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
       return {
         overflow:Math.max(document.documentElement.scrollWidth,document.body.scrollWidth,document.scrollingElement?.scrollWidth||0)>innerWidth+1,
         tiny:controls.map(e=>({text:(e.getAttribute('aria-label')||e.textContent).trim().slice(0,65),w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})).filter(r=>r.w<43.9||r.h<43.9),
-        fonts:['Satoshi','Cabinet Grotesk'].map(family=>({family,checked:document.fonts.check(`500 18px "${family}"`),loaded:[...document.fonts].some(f=>f.family.replace(/["']/g,'')===family&&f.status==='loaded')})),
+        fonts:['Satoshi'].map(family=>({family,checked:document.fonts.check(`500 18px "${family}"`),loaded:[...document.fonts].some(f=>f.family.replace(/["']/g,'')===family&&f.status==='loaded')})),
         missingTargets:[...document.querySelectorAll('[data-section]')].filter(e=>!document.getElementById(e.dataset.section)).map(e=>e.dataset.section),
         brokenImages:[...document.images].filter(e=>e.complete&&e.naturalWidth===0).map(e=>e.src)
       };
@@ -94,6 +96,14 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
         assert(headings.every(id=>targets.includes(id)),'Contents follows actual headings');
         assert.equal(await page.locator('.code-block').count(),await page.locator('.prose pre').count(),'Every code block has its copy toolbar');
         assert(await page.locator('main>.back').getAttribute('href'),'Article back link');
+        const lowContrastCode = await page.locator('.prose pre span[style]').evaluateAll(spans => {
+          const luminance = color => color.match(/[\d.]+/g).slice(0,3).map(Number).map(n=>n/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+          return [...new Set(spans.filter(span=>{
+            const text=luminance(getComputedStyle(span).color),background=luminance(getComputedStyle(span.closest('pre')).backgroundColor);
+            return (Math.max(text,background)+.05)/(Math.min(text,background)+.05)<4.5;
+          }).map(span=>getComputedStyle(span).color))];
+        });
+        assert.deepEqual(lowContrastCode,[],route+' syntax tokens meet 4.5:1');
       }
       if(route==='/') {
         assert.equal(await page.locator('img[src="/images/portrait.png"]').count(),1,'The portrait appears once');
@@ -102,9 +112,10 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
         assert.equal(await page.locator('.project-record').count(),4);
         assert.equal(await page.locator('.story').count(),3);
         assert.equal(await page.locator('.writing-more .writing-row').count(),2);
-        assert.match(text,/evaluation not independently reproduced/);
-        assert.match(text,/Simulation results/); assert.match(text,/student team/);
-        assert.match(text,/without published accuracy or latency measurements/);
+        assert.match(text,/Recorded tutorial: training metrics and predicted and ground-truth paths/);
+        assert.match(text,/Approximately 1\.2M parameters\. Grid evaluations, not physical-robot tests/);
+        assert.match(text,/Our five-student team/); assert.match(text,/Gazebo simulation with SFP and SC/);
+        assert.match(text,/simulated Kinova Gen3/); assert.match(text,/WiFi and micro-ROS/);
         assert.equal(await page.getByText(/^Tiny Recursive Model for path planning$/i).count(),1,'TRM recording and facts share one visible title');
         for(const record of await page.locator('.project-record').all()) {
           assert.equal(await record.getByRole('heading',{level:3}).count(),1,'Each project owns its title');
@@ -138,9 +149,9 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
     for(const privatePath of ['/.env','/README.md','/tests/portfolio.cjs','/resume-public.pdf']) assert.equal((await fetch(origin+privatePath)).status,404,privatePath+' not published');
     console.log('All 15 routes, content, font bytes, palette contrast and public-file boundaries passed.');
 
-    for(const width of [320,375,414,768,904,1199,1200,1440,1505]) for(const mode of ['light','dark']) {
+    for(const width of [320,375,390,414,768,904,1199,1200,1440,1505]) for(const mode of ['light','dark']) {
       await page.setViewportSize({width,height:900});
-      for(const route of ['/','/projects/cost-effective-amr/','/writing/','/writing/so-arm100101-lerobot-isaac-sim/']) {
+      for(const route of ['/','/projects/cost-effective-amr/','/writing/','/writing/so-arm100101-lerobot-isaac-sim/','/writing/install-isaac-lab-in-5-minutes-with-pixi/']) {
         await goto(route,mode);
         const state=await inspect(); assert(!state.overflow,`${route} ${width} ${mode} overflow`);assert.deepEqual(state.tiny,[],`${route} ${width} targets`);
         assert.equal(await page.locator('.menu-toggle').isVisible(),width<1200);
@@ -148,13 +159,17 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
         assert.equal(await page.getByRole('combobox',{name:'Theme'}).count(),0,'No theme dropdown remains');
         await showMenu();
         const panel=await page.locator('#navigation-panel').boundingBox();
-        if(width<1200) assert(panel.y>=72 && panel.y+panel.height<=901,'Menu fits viewport');
-        for(const control of await page.locator('#navigation-panel a,#navigation-panel select,#navigation-panel button').all()) {
+        if(width<1200) assert(panel.y>=0 && panel.y+panel.height<=(await page.locator('.identity-row').boundingBox()).y-7,'Menu fits above the bottom dock');
+        for(const control of await page.locator('#navigation-panel a:visible,#navigation-panel select:visible,#navigation-panel button:visible').all()) {
           await control.focus();
           assert(await control.evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight+1&&e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Focused menu/rail control is visible: '+await control.textContent());
         }
         if(width<1200) {await page.keyboard.press('Escape');assert(await page.locator('.menu-toggle').evaluate(e=>e===document.activeElement));assert(await page.locator('#navigation-panel').isHidden());}
         if(route==='/') {
+          // Desktop profiles moved out of the masthead; their footer destinations remain exposed.
+          for (const href of ['/resume.pdf','https://github.com/AtharvaBhorpe','https://linkedin.com/in/atharvabhorpe']) {
+            assert(await page.locator(`footer a[href="${href}"]`).isVisible(), 'Footer keeps '+href+' discoverable');
+          }
           await page.locator('#writing').scrollIntoViewIfNeeded();
           for(const link of await page.locator('.story .action').all()) {
             await link.focus();
@@ -198,6 +213,15 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
       await page.waitForFunction(id=>decodeURIComponent(location.hash.slice(1))===id,targets.at(-1));
       await page.goForward();
       await page.waitForFunction(id=>decodeURIComponent(location.hash.slice(1))===id,targets[0]);
+    }
+    for (const width of [320,390,768,1440]) {
+      await page.setViewportSize({width,height:900});await goto();
+      for (const link of await page.locator('.practice-orbit a').all()) {
+        const id=(await link.getAttribute('href')).slice(1);
+        await link.focus();await page.keyboard.press('Enter');
+        assert.equal(await page.evaluate(()=>document.activeElement.id),id,'Orbit links transfer keyboard focus');
+        assert(await page.locator('#'+id).evaluate(e=>{const r=e.getBoundingClientRect(),bar=document.querySelector('.identity-row').getBoundingClientRect();return r.top>=0&&(bar.top>0?r.top<bar.top:r.top>=bar.bottom);}), 'Navigation does not cover an orbit destination');
+      }
     }
     await page.setViewportSize({width:375,height:900});await goto();await showMenu();
     await page.locator('.menu-toggle').focus();await page.keyboard.press('Tab');assert.equal(await page.locator(':focus').getAttribute('data-section'),'home');assert(await page.locator('main').evaluate(e=>e.inert),'Content behind the open menu cannot receive focus');
@@ -328,9 +352,9 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
     console.log('Actual hero/project/writing frames, once-only reveals, rapid scroll, restoration, resize and reduced-motion changes passed.');
 
     // Tall viewports capture complete sections without screenshot-induced scrollport clipping.
-    for(const width of [375,904,1505]) for(const mode of ['light','dark']) {
+    for(const width of [320,375,390,414,768,1440,1505]) for(const mode of ['light','dark']) {
       await page.setViewportSize({width,height:width===1505?1045:900});await goto('/',mode);await scroll(0);
-      await page.screenshot({path:path.join(out,`home-${width}-${mode}.png`)});
+      await page.screenshot({path:path.join(out,`home-fold-${width}-${mode}.png`)});
       await page.setViewportSize({width,height:2400});
       for(const id of ['home','writing','contact']) {
         await page.locator('#'+id).scrollIntoViewIfNeeded();
@@ -338,7 +362,19 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
       }
       await page.setViewportSize({width,height:900});await goto('/writing/install-isaac-lab-in-5-minutes-with-pixi/',mode);
       await page.screenshot({path:path.join(out,`article-${width}-${mode}.png`)});
+      await page.locator('.code-block').first().scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(out,`code-${width}-${mode}.png`)});
+      await goto('/writing/',mode);
+      await page.screenshot({path:path.join(out,`writing-index-${width}-${mode}.png`)});
+      await goto('/projects/cost-effective-amr/',mode);
+      await page.screenshot({path:path.join(out,`project-${width}-${mode}.png`)});
     }
+    report.navigation=await require('./navigation.cjs')(browser,origin,out);
+    console.log('Bottom dock, upward menu, safe areas, 88 route/device/theme cases, 32 no-JS cases and 30 focus cycles passed.');
+    report.homepage=await require('./homepage.cjs').homepageChecks(browser,origin,path.join(out,'personal-homepage'));
+    console.log('Personal homepage: 18 viewport/theme cases, eight no-JS cases, original assets, anchors and scoped styles passed.');
+    report.homeLink=await require('./home-link.cjs').homeLinkChecks(browser,origin,path.join(out,'home-link'));
+    console.log('Home name link: 54 activations, nine cross-page returns and four native fallbacks passed.');
     assert.deepEqual(errors,[],'No browser runtime errors');
     fs.writeFileSync(path.join(out,'verification.json'),JSON.stringify(report,null,2));
     console.log(`Passed. Evidence: ${out}. Temporary server and browser closed.`);
