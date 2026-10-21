@@ -20,6 +20,6 @@ const { title, description, home = false } = Astro.props;
     <slot />
     <script is:inline src="/ui.js"></script>
     <script is:inline src="/motion.js"></script>
-    <script is:inline src="/robot-field.js"></script>
+    <script>import '../lib/robot-field.mjs';</script>
   </body>
 </html>

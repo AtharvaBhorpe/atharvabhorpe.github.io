@@ -3,7 +3,11 @@
 // Small AMRs drive aisle convoys, large AMRs scan lidar on Manhattan routes, and
 // fixed arms pick robots up and set them down. The floor scrolls with the page,
 // and cells behind text are dimmed so reading contrast is kept.
-(() => {
+// GSAP's ticker drives the fixed-step simulation alongside Lenis; quickTo eases the arms.
+import { gsap } from 'gsap';
+import { scroll } from './smooth-scroll.mjs';
+
+{
   const STEP = 1 / 60, MAX_STEPS = 4, LEVELS = 8, TAU = Math.PI * 2;
   const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
   const NOSE = '▸▾◂▴';
@@ -13,8 +17,8 @@
   const QUIET = 'main :is(h1,h2,h3,h4,p,li,dt,dd,figcaption,blockquote,pre,table,.action,.secondary-action),.site-navigation';
   const HIDDEN = 'main :is(figure,svg,img,video,iframe,.practice-orbit)';
   const LIGHT = (() => { const l = Math.hypot(-.45, -.55, .7); return [-.45 / l, -.55 / l, .7 / l]; })();
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+  const rand = (a, b) => gsap.utils.random(a, b);
+  const clamp = (v, a, b) => gsap.utils.clamp(a, b, v);
   const angleDiff = (a, b) => { let d = (b - a) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
   // Lambert against a fixed top-left light: 0 shadow .. 1 lit.
   const lit = (nx, ny, nz) => clamp(nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2], 0, 1) * .85 + .15;
@@ -25,7 +29,6 @@
   canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none';
   document.body.prepend(canvas);
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
   const grid = document.createElement('canvas');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const font = 'ui-monospace,SFMono-Regular,Menlo,Consolas,"DejaVu Sans Mono",monospace';
@@ -36,7 +39,7 @@
   let robots = [], fleets = [], amrs = [], arms = [];
   let head = new Int32Array(0), next = new Int32Array(0), bcols = 0, brows = 0, bsize = 40;
   let dark = false, styles = [], dotStyles = [], gridStyle = '';
-  let time = 0, raf = 0, last = 0, acc = 0, hitShade = 0, hitGlyph = '';
+  let time = 0, acc = 0, boost = 1, hitShade = 0, hitGlyph = '';
   const buckets = Array.from({ length: LEVELS * 2 }, () => []);
   const pointer = { cx: 0, cy: 0, active: false };
 
@@ -108,10 +111,16 @@
     for (let k = 0, y = H * .62; y < docH - R * .4; k++, y += H * 1.15) {
       const left = k % 2 === 0, bx = left ? R * .2 : W - R * .2, home = left ? 0 : Math.PI;
       arms.push({ bx, by: y, R, L1: R * .5, L2: R * .36, L2e: R * .5, home, elbow: 1, elbowTo: 1,
-        ex: bx + Math.cos(home) * R * .6, ey: y, vx: 0, vy: 0, state: 'idle', timer: rand(.5, 2.5),
-        phase: rand(0, TAU), grip: 0, carry: null, target: null, dropX: 0, dropY: 0 });
+        ex: bx + Math.cos(home) * R * .6, ey: y, state: 'idle', timer: rand(.5, 2.5),
+        phase: rand(0, TAU), grip: 0, gripTo: 0, carry: null, target: null, dropX: 0, dropY: 0 });
     }
-    for (const a of arms) ik(a);
+    for (const a of arms) {
+      // Fast start, soft landing: the gripper eases onto moving targets like a servo.
+      a.toX = gsap.quickTo(a, 'ex', { duration: .55, ease: 'power3' });
+      a.toY = gsap.quickTo(a, 'ey', { duration: .55, ease: 'power3' });
+      a.toGrip = gsap.quickTo(a, 'grip', { duration: .2, ease: 'power2' });
+      ik(a);
+    }
 
     // Small AMRs travel as convoys: one heading per fleet, robots in a column behind the leader.
     const target = clamp(Math.round(W * docH / 15000), 40, 1000);
@@ -160,6 +169,8 @@
   function step(dt) {
     time += dt;
     camY = scrollY;
+    // Scrolling hurries the floor along: convoys and lidar speed up with Lenis velocity.
+    boost += (1 + clamp(Math.abs(scroll.lenis?.velocity ?? 0) / 25, 0, 1.5) - boost) * Math.min(1, dt * 4);
     // ponytail: only the band around the viewport simulates; robots further away wait in place.
     const lo = camY - H, hi = camY + H * 2;
     stepRobots(dt, lo, hi);
@@ -188,7 +199,7 @@
       const r = robots[i];
       if (!r.on) continue;
       const f = r.fleet, [dx, dy] = DIRS[f.dir];
-      let ax = (dx * f.cruise - r.vx) * 2, ay = (dy * f.cruise - r.vy) * 2;
+      let ax = (dx * f.cruise * boost - r.vx) * 2, ay = (dy * f.cruise * boost - r.vy) * 2;
       // Robots hold the centre of their aisle so convoys read as crisp rows of cells.
       if (dx) ay += ((Math.floor(r.y / ch) + .5) * ch - r.y) * 6;
       else ax += ((Math.floor(r.x / cw) + .5) * cw - r.x) * 6;
@@ -216,16 +227,16 @@
         if (d < 110 && d > 1e-3) { const w = (1 - d / 110) ** 2; ax += ox / d * 1400 * w; ay += oy / d * 1400 * w; }
       }
       r.vx += ax * dt; r.vy += ay * dt;
-      const s = Math.hypot(r.vx, r.vy), cap = f.cruise * 2.4;
+      const s = Math.hypot(r.vx, r.vy), cap = f.cruise * 2.4 * boost;
       if (s > cap) { r.vx *= cap / s; r.vy *= cap / s; }
-      r.x = (r.x + r.vx * dt + W) % W;
-      r.y = (r.y + r.vy * dt + docH) % docH;
+      r.x = gsap.utils.wrap(0, W, r.x + r.vx * dt);
+      r.y = gsap.utils.wrap(0, docH, r.y + r.vy * dt);
       deposit(r.x, r.y, .03);
     }
   }
 
   function stepAmr(m, dt) {
-    m.scan += dt * 4.5;
+    m.scan += dt * 4.5 * boost;
     const lx = m.x + Math.cos(m.h) * m.len * .26, ly = m.y + Math.sin(m.h) * m.len * .26, range = m.len * 1.8;
     for (let s = cw; s < range; s += cw * .8) deposit(lx + Math.cos(m.scan) * s, ly + Math.sin(m.scan) * s, .07 * (1 - s / range));
     if (m.wait > 0) { m.wait -= dt; m.v = 0; return; }
@@ -279,13 +290,8 @@
         if (best) { a.target = best; a.state = 'reach'; } else a.timer = .4;
       }
     }
-    // Critically damped spring on the gripper, then IK places the links.
-    const k = 22, c = 2 * Math.sqrt(k);
-    a.vx += ((a.tx - a.ex) * k - a.vx * c) * dt; a.vy += ((a.ty - a.ey) * k - a.vy * c) * dt;
-    const s = Math.hypot(a.vx, a.vy);
-    if (s > 420) { a.vx *= 420 / s; a.vy *= 420 / s; }
-    a.ex += a.vx * dt; a.ey += a.vy * dt;
-    a.grip += (gripTo - a.grip) * Math.min(1, dt * 8);
+    a.toX(a.tx); a.toY(a.ty);
+    if (gripTo !== a.gripTo) a.toGrip(a.gripTo = gripTo);
     // Bend the elbow toward the arm's home side so it never folds off the page edge.
     // The sign flips with hysteresis and blends, so the elbow swings through instead of snapping.
     const side = angleDiff(a.home, Math.atan2(a.ey - a.by, a.ex - a.bx));
@@ -297,11 +303,10 @@
 
   // Two-link planar IK. The gripper extends the forearm, so L2e = forearm + grip reach.
   function ik(a) {
-    const dx = a.ex - a.bx, dy = a.ey - a.by, d = Math.hypot(dx, dy) || 1, L1 = a.L1, L2 = a.L2e;
-    const dc = clamp(d, Math.abs(L1 - L2) + 1, L1 + L2 - 1);
-    if (dc !== d) { a.ex = a.bx + dx / d * dc; a.ey = a.by + dy / d * dc; }
+    const dx = a.ex - a.bx, dy = a.ey - a.by, L1 = a.L1, L2 = a.L2e;
+    const dc = clamp(Math.hypot(dx, dy), Math.abs(L1 - L2) + 1, L1 + L2 - 1);
     const q2 = a.elbow * Math.acos(clamp((dc * dc - L1 * L1 - L2 * L2) / (2 * L1 * L2), -1, 1));
-    const q1 = Math.atan2(a.ey - a.by, a.ex - a.bx) - Math.atan2(L2 * Math.sin(q2), L1 + L2 * Math.cos(q2));
+    const q1 = Math.atan2(dy, dx) - Math.atan2(L2 * Math.sin(q2), L1 + L2 * Math.cos(q2));
     a.fa = q1 + q2;
     a.jx = a.bx + Math.cos(q1) * L1; a.jy = a.by + Math.sin(q1) * L1;
     a.wx = a.jx + Math.cos(a.fa) * a.L2; a.wy = a.jy + Math.sin(a.fa) * a.L2;
@@ -458,10 +463,9 @@
     }
   }
 
-  function frame(now) {
-    raf = requestAnimationFrame(frame);
-    const dt = Math.min(.1, (now - last) / 1000);
-    last = now; acc += dt;
+  function frame(_, deltaTime) {
+    const dt = Math.min(.1, deltaTime / 1000);
+    acc += dt;
     let n = 0;
     while (acc >= STEP && n < MAX_STEPS) { step(STEP); acc -= STEP; n++; }
     if (n === MAX_STEPS) acc = 0;
@@ -475,25 +479,21 @@
     render();
   }
 
-  function start() {
-    cancelAnimationFrame(raf);
-    if (reduced.matches) { still(); return; }
-    last = performance.now();
-    raf = requestAnimationFrame(frame);
-  }
-
   let pending = 0;
   const relayout = () => { if (!pending) pending = requestAnimationFrame(() => { pending = 0; layout(); }); };
   new ResizeObserver(relayout).observe(document.body);
   addEventListener('resize', relayout);
   addEventListener('scroll', () => { if (reduced.matches) requestAnimationFrame(render); }, { passive: true });
   new MutationObserver(() => { readTheme(); if (reduced.matches) render(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-resolved'] });
-  reduced.addEventListener('change', start);
   addEventListener('pointermove', e => { pointer.cx = e.clientX; pointer.cy = e.clientY; pointer.active = e.pointerType !== 'touch'; }, { passive: true });
   addEventListener('pointerdown', e => { if (!reduced.matches) pulse(e.clientX, e.clientY + scrollY); }, { passive: true });
   document.documentElement.addEventListener('pointerleave', () => { pointer.active = false; });
   addEventListener('blur', () => { pointer.active = false; });
 
   layout();
-  start();
-})();
+  gsap.matchMedia().add({ motion: '(prefers-reduced-motion: no-preference)' }, ({ conditions }) => {
+    if (!conditions.motion) { still(); return; }
+    gsap.ticker.add(frame);
+    return () => gsap.ticker.remove(frame);
+  });
+}
