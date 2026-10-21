@@ -10,3 +10,5 @@
 .practice-orbit a[href]::before{inset:-36px -56px;background:color-mix(in srgb,var(--surface-page) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);--feather:radial-gradient(closest-side,#000 40%,rgba(0,0,0,.8) 55%,rgba(0,0,0,.5) 70%,rgba(0,0,0,.22) 84%,rgba(0,0,0,.06) 94%,transparent);transition:background-color 160ms}
 .practice-orbit a[href]:is(:hover,:focus-visible,:active){background:transparent}
 .practice-orbit a[href]:is(:hover,:focus-visible,:active)::before{background:var(--surface-navigation)}
+/* The feathered ovals may spill sideways on phones; clip them a gutter out so they never widen the page. */
+.connections{overflow:clip;overflow-clip-margin:var(--gutter)}
