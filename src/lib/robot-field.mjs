@@ -15,7 +15,8 @@ import '../styles/robot-field.css';
   const RAMP = '.:-=+*#%@';
   const EDGE = '.,:;';
   const SUB = [[.2, .25], [.8, .25], [.2, .75], [.8, .75]];
-  const QUIET = 'main :is(h1,h2,h3,h4,p,li,dt,dd,figcaption,blockquote,pre,table,.action,.secondary-action),.site-navigation';
+  // Anything readable or tappable: text blocks, every link and button, and the footer email address.
+  const QUIET = 'main :is(h1,h2,h3,h4,p,li,dt,dd,figcaption,blockquote,pre,table,a,button,.email-control),.site-navigation';
   // Frosted-glass diagrams (.project-drawing, .practice-orbit) let the floor show through, softened.
   const HIDDEN = 'main :is(figure:not(.project-drawing),img,video,iframe)';
   const LIGHT = (() => { const l = Math.hypot(-.45, -.55, .7); return [-.45 / l, -.55 / l, .7 / l]; })();
