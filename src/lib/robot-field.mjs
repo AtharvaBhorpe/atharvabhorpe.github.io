@@ -104,11 +104,11 @@ import { scroll } from './smooth-scroll.mjs';
   }
 
   function seed(full) {
-    // Arms: fixed stations alternating along the page edges, half off-screen.
+    // Arms: sparse fixed stations, one per ~2.5 screens, alternating page edges.
     for (const r of robots) r.carried = null;
-    const R = clamp(Math.min(W * .42, H * .6), 150, 430);
+    const R = clamp(Math.min(W * .34, H * .45), 130, 320);
     arms = [];
-    for (let k = 0, y = H * .62; y < docH - R * .4; k++, y += H * 1.15) {
+    for (let k = 0, y = H * .62; y < docH - R * .4; k++, y += H * 2.5) {
       const left = k % 2 === 0, bx = left ? R * .2 : W - R * .2, home = left ? 0 : Math.PI;
       arms.push({ bx, by: y, R, L1: R * .5, L2: R * .36, L2e: R * .5, home, elbow: 1, elbowTo: 1,
         ex: bx + Math.cos(home) * R * .6, ey: y, state: 'idle', timer: rand(.5, 2.5),
@@ -123,14 +123,14 @@ import { scroll } from './smooth-scroll.mjs';
     }
 
     // Small AMRs travel as convoys: one heading per fleet, robots in a column behind the leader.
-    const target = clamp(Math.round(W * docH / 50000), 12, 300);
+    const target = clamp(Math.round(W * docH / 120000), 6, 120);
     if (full) { robots = []; fleets = []; }
     robots.length = Math.min(robots.length, target);
     while (robots.length < target) {
       const dir = Math.random() < .7 ? (Math.random() < .5 ? 0 : 2) : (Math.random() < .5 ? 1 : 3);
       const f = { dir, cruise: rand(26, 44), turnAt: time + rand(2, 8) };
       fleets.push(f);
-      const n = Math.min(Math.round(rand(3, 6)), target - robots.length);
+      const n = Math.min(Math.round(rand(2, 4)), target - robots.length);
       const x = rand(0, W), y = rand(0, docH), [dx, dy] = DIRS[dir];
       for (let k = 0; k < n; k++) {
         const lane = (k % 2) * (dx ? ch * 2 : cw * 3);
