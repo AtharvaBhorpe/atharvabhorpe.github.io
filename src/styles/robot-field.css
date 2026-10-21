@@ -1,6 +1,7 @@
 /* Frosted glass: the robot floor stays visible behind diagrams, blurred so the line art reads first.
+   The mask eases out over the outer 70%, so the glass has no visible rim.
    Ships with the floor because it only exists to sit over it. [href] outranks home.css in any load order. */
 .project-drawing,.practice-orbit{position:relative;isolation:isolate}
-.project-drawing::before,.practice-orbit::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--surface-page) 30%,transparent);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);-webkit-mask-image:radial-gradient(closest-side,#000 72%,transparent);mask-image:radial-gradient(closest-side,#000 72%,transparent)}
+.project-drawing::before,.practice-orbit::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--surface-page) 30%,transparent);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);-webkit-mask-image:radial-gradient(closest-side,#000 30%,rgba(0,0,0,.82) 48%,rgba(0,0,0,.55) 64%,rgba(0,0,0,.28) 80%,rgba(0,0,0,.08) 92%,transparent);mask-image:radial-gradient(closest-side,#000 30%,rgba(0,0,0,.82) 48%,rgba(0,0,0,.55) 64%,rgba(0,0,0,.28) 80%,rgba(0,0,0,.08) 92%,transparent)}
 .practice-orbit a[href]{background:color-mix(in srgb,var(--surface-page) 70%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .practice-orbit a[href]:is(:hover,:focus-visible,:active){background:var(--surface-navigation)}

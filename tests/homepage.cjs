@@ -70,7 +70,7 @@ async function homepageChecks(browser, origin, out, before = false) {
           const lines=[...range.getClientRects()].map(r=>({left:r.left,right:r.right}));
           const p=portrait.getBoundingClientRect(), intro=document.querySelector('.hero-introduction').getBoundingClientRect();
           const dock=document.querySelector('.identity-row').getBoundingClientRect();
-          return {lines,portrait:[p.width,p.height],loaded:portrait.complete&&portrait.naturalWidth===1254,fit:getComputedStyle(portrait).objectFit,
+          return {lines,portrait:[p.width,p.height],loaded:portrait.complete&&portrait.naturalWidth===640,fit:getComputedStyle(portrait).objectFit,
             introBottom:intro.bottom,available:matchMedia('(max-width:1199px), (hover:none), (pointer:coarse), (pointer:none)').matches?dock.top:innerHeight,
             heroHeight:document.querySelector('#home').getBoundingClientRect().height,overflow:document.documentElement.scrollWidth>innerWidth};
         });
@@ -106,7 +106,7 @@ async function homepageChecks(browser, origin, out, before = false) {
       await page.goto(origin);
       assert.equal(await page.locator('h1').innerText(),'Atharva Bhorpe');
       assert.equal(await page.locator('.hero-introduction').innerText(),introduction);
-      assert(await page.locator('.hero-portrait img').evaluate(img=>img.complete&&img.naturalWidth===1254));
+      assert(await page.locator('.hero-portrait img').evaluate(img=>img.complete&&img.naturalWidth===640));
       await page.locator('.hero-actions a').first().click();assert.equal(new URL(page.url()).hash,'#projects');
       assert.equal(await page.locator('.project-anatomy').count(),2);
       assert.equal(await page.locator('.practice-orbit a').count(),4);

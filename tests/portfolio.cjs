@@ -21,7 +21,7 @@ const approvedAssets = {
   'fonts/cabinet-grotesk.woff2':'f71103771c9e32406026b6ea46c7e57cb977d5884e70d0f1beeab91ab2c7abb6',
   'fonts/satoshi.woff2':'e739aff9b4d02c264341d6d4872edcda28e79373aeda936f659566a1cd3eb47f',
   'fonts/Fontshare-FFL.txt':'145e7fe2429a3336ba215c070ef722000e01348a3e1baaa127e871bb5012f554',
-  'images/portrait.png':'f2b05066195adadad70b16d800ce50ab3c304985ceead9917b8fcce031af8ab1',
+  'images/portrait.webp':'e89305730c5646edad50e56b6d8e1c5b7e9f9feb6fb57555be6fdc20716c7ae6',
   'resume.pdf':'a8204267abc9b353a25df423678245a77ec362c2da0461e66acbc6e09a4de900',
 };
 for (const [file,hash] of Object.entries(approvedAssets)) assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,'public',file))).digest('hex'), hash, file);
@@ -106,8 +106,8 @@ const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
         assert.deepEqual(lowContrastCode,[],route+' syntax tokens meet 4.5:1');
       }
       if(route==='/') {
-        assert.equal(await page.locator('img[src="/images/portrait.png"]').count(),1,'The portrait appears once');
-        assert.equal(await page.locator('#home img[src="/images/portrait.png"]').count(),1,'The portrait belongs to the opening introduction');
+        assert.equal(await page.locator('img[src="/images/portrait.webp"]').count(),1,'The portrait appears once');
+        assert.equal(await page.locator('#home img[src="/images/portrait.webp"]').count(),1,'The portrait belongs to the opening introduction');
         assert(await page.locator('#home').evaluate(e=>Boolean(e.compareDocumentPosition(document.getElementById('projects'))&Node.DOCUMENT_POSITION_FOLLOWING)),'The personal introduction precedes projects');
         assert.equal(await page.locator('.project-record').count(),4);
         assert.equal(await page.locator('.story').count(),3);

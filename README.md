@@ -2,7 +2,8 @@
 
 Static Astro portfolio at https://atharvabhorpe.github.io/.
 The editorial design uses a monochrome light/dark palette, serif headings and Satoshi body text.
-The original fonts, portrait, project media, downloads and résumé retain their approved bytes.
+The original fonts, project media, downloads and résumé retain their approved bytes.
+The portrait ships as a 640 px WebP (45 KB), sized for its 320 px display at 2× density.
 
 ## Development and checks
 
