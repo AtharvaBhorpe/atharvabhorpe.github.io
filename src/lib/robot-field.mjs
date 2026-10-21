@@ -123,14 +123,14 @@ import { scroll } from './smooth-scroll.mjs';
     }
 
     // Small AMRs travel as convoys: one heading per fleet, robots in a column behind the leader.
-    const target = clamp(Math.round(W * docH / 15000), 40, 1000);
+    const target = clamp(Math.round(W * docH / 50000), 12, 300);
     if (full) { robots = []; fleets = []; }
     robots.length = Math.min(robots.length, target);
     while (robots.length < target) {
       const dir = Math.random() < .7 ? (Math.random() < .5 ? 0 : 2) : (Math.random() < .5 ? 1 : 3);
       const f = { dir, cruise: rand(26, 44), turnAt: time + rand(2, 8) };
       fleets.push(f);
-      const n = Math.min(Math.round(rand(4, 11)), target - robots.length);
+      const n = Math.min(Math.round(rand(3, 6)), target - robots.length);
       const x = rand(0, W), y = rand(0, docH), [dx, dy] = DIRS[dir];
       for (let k = 0; k < n; k++) {
         const lane = (k % 2) * (dx ? ch * 2 : cw * 3);
@@ -231,7 +231,7 @@ import { scroll } from './smooth-scroll.mjs';
       if (s > cap) { r.vx *= cap / s; r.vy *= cap / s; }
       r.x = gsap.utils.wrap(0, W, r.x + r.vx * dt);
       r.y = gsap.utils.wrap(0, docH, r.y + r.vy * dt);
-      deposit(r.x, r.y, .03);
+      deposit(r.x, r.y, .02);
     }
   }
 
