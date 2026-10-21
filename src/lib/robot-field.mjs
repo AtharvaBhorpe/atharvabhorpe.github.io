@@ -6,6 +6,7 @@
 // GSAP's ticker drives the fixed-step simulation alongside Lenis; quickTo eases the arms.
 import { gsap } from 'gsap';
 import { scroll } from './smooth-scroll.mjs';
+import '../styles/robot-field.css';
 
 {
   const STEP = 1 / 60, MAX_STEPS = 4, LEVELS = 8, TAU = Math.PI * 2;
@@ -15,7 +16,8 @@ import { scroll } from './smooth-scroll.mjs';
   const EDGE = '.,:;';
   const SUB = [[.2, .25], [.8, .25], [.2, .75], [.8, .75]];
   const QUIET = 'main :is(h1,h2,h3,h4,p,li,dt,dd,figcaption,blockquote,pre,table,.action,.secondary-action),.site-navigation';
-  const HIDDEN = 'main :is(figure,svg,img,video,iframe,.practice-orbit)';
+  // Frosted-glass diagrams (.project-drawing, .practice-orbit) let the floor show through, softened.
+  const HIDDEN = 'main :is(figure:not(.project-drawing),img,video,iframe)';
   const LIGHT = (() => { const l = Math.hypot(-.45, -.55, .7); return [-.45 / l, -.55 / l, .7 / l]; })();
   const rand = (a, b) => gsap.utils.random(a, b);
   const clamp = (v, a, b) => gsap.utils.clamp(a, b, v);
@@ -108,8 +110,10 @@ import { scroll } from './smooth-scroll.mjs';
     for (const r of robots) r.carried = null;
     const R = clamp(Math.min(W * .34, H * .45), 130, 320);
     arms = [];
-    for (let k = 0, y = H * .62; y < docH - R * .4; k++, y += H * 2.5) {
-      const left = k % 2 === 0, bx = left ? R * .2 : W - R * .2, home = left ? 0 : Math.PI;
+    // The first arm fills the empty space under the portrait, reaching down and left.
+    const portrait = document.querySelector('.hero-portrait')?.getBoundingClientRect();
+    for (let k = portrait ? 1 : 0, y = portrait ? portrait.bottom + scrollY + R * .3 : H * .62; y < docH - R * .4; k++, y += H * 2.5) {
+      const left = k % 2 === 0, bx = left ? R * .2 : W - R * .2, home = left ? 0 : Math.PI - (arms.length ? 0 : .35);
       arms.push({ bx, by: y, R, L1: R * .5, L2: R * .36, L2e: R * .5, home, elbow: 1, elbowTo: 1,
         ex: bx + Math.cos(home) * R * .6, ey: y, state: 'idle', timer: rand(.5, 2.5),
         phase: rand(0, TAU), grip: 0, gripTo: 0, carry: null, target: null, dropX: 0, dropY: 0 });
