@@ -53,7 +53,7 @@
   "src/content/writing/so-arm100101-lerobot-isaac-sim.md": "482b01bdeb49eb220b35be2840b2c37e00807c1e2c69404c632384c1a6311115",
   "src/content/writing/teaching-a-tiny-recursive-model-to-plan-paths.md": "0fa55122ffb016f867e62e426da78612da43ffb8d5abc9838d23a043d880631d",
   "src/data/project-figures.json": "6dbd97f3f70f2e0f1c1d01a695ae5ab5607a61c17e2d8481d3a2c8fdb9d0cf75",
-  "src/layouts/Base.astro": "d9ae81acc61f25ea1e95eaa45256f478a260b903be69c1711bf4e1ee3f273ce6",
+  "src/layouts/Base.astro": "f7320a6e9dfa42b1caa69de91eca1331e09928b87237e61348b34d237d22f66f",
   "src/styles/detail.css": "fb018bb9a4df0d284d0a03e1e65618d76669c5a37510507a09595caa29b1522e",
   "src/styles/production.css": "407e5f36d125d7d40fab6b8efc6fe1dfc24e2fa99f1acfc742c6d75d36c8dc64",
   "src/styles/project-anatomy.css": "e10deba0955c74451416192133590976129740674d65a878f1022e67be0f2b79",
