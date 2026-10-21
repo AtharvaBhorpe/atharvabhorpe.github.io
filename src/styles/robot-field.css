@@ -1,0 +1,14 @@
+/* Frosted glass: the robot floor stays visible behind diagrams, blurred so the line art reads first.
+   Every glass shape is a feathered oval: it eases out over a long ramp, so there is no visible rim.
+   Ships with the floor because it only exists to sit over it. [href] outranks home.css in any load order. */
+.project-drawing,.practice-orbit{position:relative;isolation:isolate}
+.project-drawing::before,.practice-orbit::before,.practice-orbit a[href]::before{content:"";position:absolute;inset:0;z-index:-1;background:color-mix(in srgb,var(--surface-page) 30%,transparent);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);--feather:radial-gradient(closest-side,#000 30%,rgba(0,0,0,.82) 48%,rgba(0,0,0,.55) 64%,rgba(0,0,0,.28) 80%,rgba(0,0,0,.08) 92%,transparent);-webkit-mask-image:var(--feather);mask-image:var(--feather)}
+/* The orbit has open space around it, so its glass spreads past the frame for a longer fade. */
+.practice-orbit::before{inset:-10%}
+/* Labels: a soft oval well beyond the text instead of a box, dense enough at the centre to hide the ring line. */
+.practice-orbit a[href]{background:transparent;isolation:isolate}
+.practice-orbit a[href]::before{inset:-36px -56px;background:color-mix(in srgb,var(--surface-page) 85%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);--feather:radial-gradient(closest-side,#000 40%,rgba(0,0,0,.8) 55%,rgba(0,0,0,.5) 70%,rgba(0,0,0,.22) 84%,rgba(0,0,0,.06) 94%,transparent);transition:background-color 160ms}
+.practice-orbit a[href]:is(:hover,:focus-visible,:active){background:transparent}
+.practice-orbit a[href]:is(:hover,:focus-visible,:active)::before{background:var(--surface-navigation)}
+/* The feathered ovals may spill sideways on phones; clip them a gutter out so they never widen the page. */
+.connections{overflow:clip;overflow-clip-margin:var(--gutter)}
